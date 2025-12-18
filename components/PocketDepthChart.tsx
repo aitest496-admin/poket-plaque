@@ -60,4 +60,4 @@ const PocketDepthChart: React.FC<PocketDepthChartProps> = ({ values, onChange, i
   );
 };
 
-export default PocketDepthChart;
+export default React.memo(PocketDepthChart);

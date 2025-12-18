@@ -49,8 +49,8 @@ const PlaqueDiagram: React.FC<PlaqueDiagramProps> = ({ value, onChange, onToggle
   // Outer: 2 to 98 (padding for stroke).
   
   return (
-    <div className="h-[86px] w-full flex items-center justify-center bg-white touch-none">
-      <svg width="80" height="80" viewBox="0 0 100 100">
+    <div className="w-full aspect-square flex items-center justify-center bg-white touch-none p-1">
+      <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-sm">
         <path d="M2 2 L98 2 L61 39 L39 39 Z" {...getPathProps(Surface.Buccal)} />
         <path d="M98 2 L98 98 L61 61 L61 39 Z" {...getPathProps(Surface.Distal)} />
         <path d="M2 98 L98 98 L61 61 L39 61 Z" {...getPathProps(Surface.Lingual)} />
@@ -65,4 +65,4 @@ const PlaqueDiagram: React.FC<PlaqueDiagramProps> = ({ value, onChange, onToggle
   );
 };
 
-export default PlaqueDiagram;
+export default React.memo(PlaqueDiagram);

@@ -13,15 +13,6 @@ const ThreePointToggle: React.FC<ThreePointToggleProps> = ({ values, onChange, t
   
   const handlePointerEnter = (e: React.PointerEvent, index: MeasurementPoint, isActive: boolean) => {
     if (e.buttons === 1) {
-      // For toggles, dragging usually means "painting" the opposite of what it was,
-      // but simplistic toggle on drag is acceptable for this PoC.
-      // To improve UX, we check if it's already in the desired state, but simple toggle is requested.
-      // Note: Dragging across multiple usually implies setting them all ON or all OFF.
-      // Here we just flip it if it's not the same as the current "drag" intent, but simplest is just update.
-      // We'll stick to simple update (flip) if the user enters the cell.
-      // However, flipping on re-entry is annoying.
-      // A safer bet for "tracing" is to set it to true (or toggle once).
-      // Let's rely on the parent state update.
        onChange(index, !isActive);
     }
   };
@@ -49,4 +40,4 @@ const ThreePointToggle: React.FC<ThreePointToggleProps> = ({ values, onChange, t
   );
 };
 
-export default ThreePointToggle;
+export default React.memo(ThreePointToggle);
