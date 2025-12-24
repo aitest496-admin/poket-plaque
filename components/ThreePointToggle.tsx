@@ -6,9 +6,10 @@ interface ThreePointToggleProps {
   onChange: (pointIndex: MeasurementPoint, value: boolean) => void;
   type: 'pus' | 'bleeding';
   singlePoint?: boolean;
+  displayPoints?: MeasurementPoint[];
 }
 
-const ThreePointToggle: React.FC<ThreePointToggleProps> = ({ values, onChange, type, singlePoint = false }) => {
+const ThreePointToggle: React.FC<ThreePointToggleProps> = ({ values, onChange, type, singlePoint = false, displayPoints }) => {
   // PoC Colors: Pus = #808080 (Grey), Bleeding = #ff4d4d (Red)
   const activeClass = type === 'pus' ? '!bg-[#808080] text-white' : '!bg-[#ff4d4d] text-white';
   
@@ -18,47 +19,33 @@ const ThreePointToggle: React.FC<ThreePointToggleProps> = ({ values, onChange, t
     }
   };
 
-  // 1-point method: Render only the center block (index 1)
-  if (singlePoint) {
-    const index = 1;
-    const isActive = values[index];
-    return (
-      <div className="flex h-[24px] border-b border-[#ccc] bg-white w-full text-[9px] touch-none">
-        <div
-          onPointerDown={(e) => {
-             e.currentTarget.releasePointerCapture(e.pointerId);
-             onChange(index as MeasurementPoint, !isActive);
-          }}
-          onPointerEnter={(e) => handlePointerEnter(e, index as MeasurementPoint, isActive)}
-          className={`
-            flex-1 cursor-pointer flex items-center justify-center font-bold select-none
-            ${isActive ? activeClass : ''}
-          `}
-        />
-      </div>
-    );
-  }
+  // Determine points to render
+  const pointsToRender: MeasurementPoint[] = displayPoints 
+    ? displayPoints 
+    : (singlePoint ? [1] : [0, 1, 2]);
 
-  // Standard 3-point method
   return (
     <div className="flex h-[24px] border-b border-[#ccc] bg-white w-full text-[9px] touch-none">
-      {values.map((isActive, index) => (
-        <div
-          key={index}
-          onPointerDown={(e) => {
-             e.currentTarget.releasePointerCapture(e.pointerId);
-             onChange(index as MeasurementPoint, !isActive);
-          }}
-          onPointerEnter={(e) => handlePointerEnter(e, index as MeasurementPoint, isActive)}
-          className={`
-            flex-1 border-r border-[#ccc] last:border-r-0 
-            cursor-pointer flex items-center justify-center font-bold select-none
-            ${isActive ? activeClass : ''}
-          `}
-        >
-          {/* Label optional for compactness */}
-        </div>
-      ))}
+      {pointsToRender.map((index) => {
+        const isActive = values[index];
+        return (
+          <div
+            key={index}
+            onPointerDown={(e) => {
+               e.currentTarget.releasePointerCapture(e.pointerId);
+               onChange(index as MeasurementPoint, !isActive);
+            }}
+            onPointerEnter={(e) => handlePointerEnter(e, index as MeasurementPoint, isActive)}
+            className={`
+              flex-1 border-r border-[#ccc] last:border-r-0 
+              cursor-pointer flex items-center justify-center font-bold select-none
+              ${isActive ? activeClass : ''}
+            `}
+          >
+            {/* Label optional for compactness */}
+          </div>
+        );
+      })}
     </div>
   );
 };

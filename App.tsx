@@ -15,6 +15,14 @@ const createTooth = (id: number): ToothData => ({
 // Helper to generate a range of teeth
 const generateTeeth = (ids: number[]) => ids.map(createTooth);
 
+// Helper to generate full mouth data structure
+const generateFullMouth = () => ({
+    UL: generateTeeth([1, 2, 3, 4, 5, 6, 7, 8]),       // Left Upper: 1 to 8 (Center to Left)
+    UR: generateTeeth([8, 7, 6, 5, 4, 3, 2, 1]),       // Right Upper: 8 to 1 (Right to Center)
+    LL: generateTeeth([1, 2, 3, 4, 5, 6, 7, 8]),       // Left Lower: 1 to 8 (Center to Left)
+    LR: generateTeeth([8, 7, 6, 5, 4, 3, 2, 1]),       // Right Lower: 8 to 1 (Right to Center)
+});
+
 type Quadrant = 'UL' | 'UR' | 'LL' | 'LR';
 
 // MiniMap Component for visual navigation
@@ -59,10 +67,15 @@ const MiniMap: React.FC<{ current: Quadrant; onSelect: (q: Quadrant) => void; di
 const MethodTab: React.FC<{ current: MeasurementMethod; onChange: (m: MeasurementMethod) => void }> = ({ current, onChange }) => {
   const Tab = ({ method, label }: { method: MeasurementMethod; label: string }) => {
     const isActive = current === method;
+    // Use fixed width (w-36 = 9rem = 144px) for 4-point/6-point to ensure width increase on all devices
+    // This adds roughly 80px (~2cm) compared to standard, covering the 1.5cm request safely.
+    // Added shrink-0 to prevent iPad flex container from squeezing them.
+    const widthClass = (method === '4-point' || method === '6-point') ? 'w-36' : 'px-4';
+
     return (
       <button
         onClick={() => onChange(method)}
-        className={`px-3 py-1 text-xs font-medium rounded-full transition-all duration-200 select-none
+        className={`${widthClass} shrink-0 py-1 text-xs font-medium rounded-full transition-all duration-200 select-none text-center
           ${isActive 
             ? 'bg-white text-blue-600 shadow-sm ring-1 ring-slate-200' 
             : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}
@@ -74,10 +87,36 @@ const MethodTab: React.FC<{ current: MeasurementMethod; onChange: (m: Measuremen
   };
 
   return (
-    <div className="flex bg-slate-100 p-1 rounded-full border border-slate-200/60 shadow-inner items-center">
+    <div className="flex bg-slate-100 p-1 rounded-full border border-slate-200/60 shadow-inner items-center overflow-x-auto no-scrollbar">
       <Tab method="1-point" label="1点法" />
       <Tab method="4-point" label="4点法" />
       <Tab method="6-point" label="6点法" />
+    </div>
+  );
+};
+
+// SideLabels Component to show Buccal/Lingual text
+const SideLabels = ({ jaw }: { jaw: 'upper' | 'lower' }) => {
+  // Upper Jaw: Top is Buccal, Bottom is Lingual (Outer is Top)
+  // Lower Jaw: Top is Lingual, Bottom is Buccal (Outer is Bottom)
+  const topText = jaw === 'upper' ? '頬側' : '舌側';
+  // Change Upper Jaw Lingual label to '口蓋側' (Palatal)
+  const bottomText = jaw === 'upper' ? '口蓋側' : '頬側';
+
+  return (
+    <div className="flex flex-col self-stretch items-center min-w-[40px] select-none text-slate-400 font-bold text-lg py-1">
+       {/* Top Section - Align to bottom of section (closest to ID bar) then offset up to 7-9mm area */}
+       <div className="flex-1 flex flex-col justify-end items-center pb-[145px]">
+         <span className="[writing-mode:vertical-rl] tracking-widest">{topText}</span>
+       </div>
+       
+       {/* Spacer for Tooth ID bar (approx 24px height) */}
+       <div className="h-[24px] w-full shrink-0"></div>
+
+       {/* Bottom Section - Align to top of section (closest to ID bar) then offset down to 7-9mm area */}
+       <div className="flex-1 flex flex-col justify-start items-center pt-[145px]">
+         <span className="[writing-mode:vertical-rl] tracking-widest">{bottomText}</span>
+       </div>
     </div>
   );
 };
@@ -86,18 +125,23 @@ const App: React.FC = () => {
   const [currentQuadrant, setCurrentQuadrant] = useState<Quadrant>('UL');
   const [measurementMethod, setMeasurementMethod] = useState<MeasurementMethod>('6-point');
   
-  // State holds data for all 4 quadrants
-  const [teethData, setTeethData] = useState<{ UL: ToothData[]; UR: ToothData[]; LL: ToothData[]; LR: ToothData[] }>({
-    UL: generateTeeth([1, 2, 3, 4, 5, 6, 7, 8]),       // Left Upper: 1 to 8 (Center to Left)
-    UR: generateTeeth([8, 7, 6, 5, 4, 3, 2, 1]),       // Right Upper: 8 to 1 (Right to Center)
-    LL: generateTeeth([1, 2, 3, 4, 5, 6, 7, 8]),       // Left Lower: 1 to 8 (Center to Left)
-    LR: generateTeeth([8, 7, 6, 5, 4, 3, 2, 1]),       // Right Lower: 8 to 1 (Right to Center)
+  // State holds data independently for each measurement method
+  const [allTeethData, setAllTeethData] = useState<Record<MeasurementMethod, { UL: ToothData[]; UR: ToothData[]; LL: ToothData[]; LR: ToothData[] }>>({
+    '1-point': generateFullMouth(),
+    '4-point': generateFullMouth(),
+    '6-point': generateFullMouth(),
   });
 
+  // Get current data based on selected method
+  const currentTeethData = allTeethData[measurementMethod];
+
   const handleToothUpdate = (quadrant: Quadrant, updatedTooth: ToothData) => {
-    setTeethData(prev => ({
+    setAllTeethData(prev => ({
       ...prev,
-      [quadrant]: prev[quadrant].map(t => t.id === updatedTooth.id ? updatedTooth : t)
+      [measurementMethod]: {
+        ...prev[measurementMethod],
+        [quadrant]: prev[measurementMethod][quadrant].map(t => t.id === updatedTooth.id ? updatedTooth : t)
+      }
     }));
   };
 
@@ -223,11 +267,11 @@ const App: React.FC = () => {
                     <div className="flex justify-center gap-1">
                         {/* UR (8-1) and LR (8-1) */}
                         <div className="flex gap-[1px] bg-white p-1 rounded border border-slate-300 shadow-sm">
-                            {teethData.UR.map((tooth, index) => (
+                            {currentTeethData.UR.map((tooth, index) => (
                                 <Tooth 
                                     key={tooth.id} 
                                     data={tooth} 
-                                    lowerData={teethData.LR[index]}
+                                    lowerData={currentTeethData.LR[index]}
                                     onUpdate={(t) => handleToothUpdate('UR', t)} 
                                     onUpdateLower={(t) => handleToothUpdate('LR', t)}
                                     jaw="upper" 
@@ -238,11 +282,11 @@ const App: React.FC = () => {
                         <div className="w-2 shrink-0"></div>
                         {/* UL (1-8) and LL (1-8) */}
                         <div className="flex gap-[1px] bg-white p-1 rounded border border-slate-300 shadow-sm">
-                            {teethData.UL.map((tooth, index) => (
+                            {currentTeethData.UL.map((tooth, index) => (
                                 <Tooth 
                                     key={tooth.id} 
                                     data={tooth} 
-                                    lowerData={teethData.LL[index]}
+                                    lowerData={currentTeethData.LL[index]}
                                     onUpdate={(t) => handleToothUpdate('UL', t)} 
                                     onUpdateLower={(t) => handleToothUpdate('LL', t)}
                                     jaw="upper" 
@@ -263,10 +307,12 @@ const App: React.FC = () => {
                 {/* [0,0] UPPER RIGHT - Aligned LEFT (justify-start), Gap on RIGHT (midline) */}
                 <div className="w-1/2 h-1/2 flex items-center justify-start bg-slate-100 p-1 md:p-2 pr-8 md:pr-24">
                     <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-hidden">
-                    <div className="flex justify-between w-full h-full gap-[1px]">
-                        {teethData.UR.map(tooth => (
+                    <div className="flex justify-between w-full h-full gap-[1px] items-start">
+                        {currentTeethData.UR.map(tooth => (
                         <Tooth key={tooth.id} data={tooth} onUpdate={(t) => handleToothUpdate('UR', t)} jaw="upper" method={measurementMethod} />
                         ))}
+                        {/* Side Labels on Right (next to arrow) */}
+                        <SideLabels jaw="upper" />
                     </div>
                     </div>
                 </div>
@@ -274,8 +320,10 @@ const App: React.FC = () => {
                 {/* [0,1] UPPER LEFT - Aligned RIGHT (justify-end), Gap on LEFT (midline) */}
                 <div className="w-1/2 h-1/2 flex items-center justify-end bg-slate-100 p-1 md:p-2 pl-8 md:pl-24">
                     <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-hidden">
-                    <div className="flex justify-between w-full h-full gap-[1px]">
-                        {teethData.UL.map(tooth => (
+                    <div className="flex justify-between w-full h-full gap-[1px] items-start">
+                        {/* Side Labels on Left (next to arrow) */}
+                        <SideLabels jaw="upper" />
+                        {currentTeethData.UL.map(tooth => (
                         <Tooth key={tooth.id} data={tooth} onUpdate={(t) => handleToothUpdate('UL', t)} jaw="upper" method={measurementMethod} />
                         ))}
                     </div>
@@ -286,10 +334,12 @@ const App: React.FC = () => {
                 {/* [1,0] LOWER RIGHT - Aligned LEFT (justify-start), Gap on RIGHT (midline) */}
                 <div className="w-1/2 h-1/2 flex items-center justify-start bg-slate-100 p-1 md:p-2 pr-8 md:pr-24">
                     <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-hidden">
-                    <div className="flex justify-between w-full h-full gap-[1px]">
-                        {teethData.LR.map(tooth => (
+                    <div className="flex justify-between w-full h-full gap-[1px] items-start">
+                        {currentTeethData.LR.map(tooth => (
                         <Tooth key={tooth.id} data={tooth} onUpdate={(t) => handleToothUpdate('LR', t)} jaw="lower" method={measurementMethod} />
                         ))}
+                        {/* Side Labels on Right (next to arrow) */}
+                        <SideLabels jaw="lower" />
                     </div>
                     </div>
                 </div>
@@ -297,8 +347,10 @@ const App: React.FC = () => {
                 {/* [1,1] LOWER LEFT - Aligned RIGHT (justify-end), Gap on LEFT (midline) */}
                 <div className="w-1/2 h-1/2 flex items-center justify-end bg-slate-100 p-1 md:p-2 pl-8 md:pl-24">
                     <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-hidden">
-                    <div className="flex justify-between w-full h-full gap-[1px]">
-                        {teethData.LL.map(tooth => (
+                    <div className="flex justify-between w-full h-full gap-[1px] items-start">
+                        {/* Side Labels on Left (next to arrow) */}
+                        <SideLabels jaw="lower" />
+                        {currentTeethData.LL.map(tooth => (
                         <Tooth key={tooth.id} data={tooth} onUpdate={(t) => handleToothUpdate('LL', t)} jaw="lower" method={measurementMethod} />
                         ))}
                     </div>

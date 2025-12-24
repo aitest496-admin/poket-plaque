@@ -4,16 +4,19 @@ import { MeasurementPoint } from '../types';
 interface PocketDepthChartProps {
   values: [number | null, number | null, number | null];
   onChange: (pointIndex: MeasurementPoint, value: number) => void;
-  isInverted?: boolean; // If true, 1 is at the top (for Buccal/Bottom section)
+  isInverted?: boolean; // If true, 0 is at the top (for Buccal/Bottom section)
   singlePoint?: boolean;
+  displayPoints?: MeasurementPoint[];
 }
 
-const PocketDepthChart: React.FC<PocketDepthChartProps> = ({ values, onChange, isInverted = false, singlePoint = false }) => {
-  // If singlePoint, only show index 1 (Center). Otherwise show all 3.
-  const points: MeasurementPoint[] = singlePoint ? [1] : [0, 1, 2];
+const PocketDepthChart: React.FC<PocketDepthChartProps> = ({ values, onChange, isInverted = false, singlePoint = false, displayPoints }) => {
+  // Determine points to render: use displayPoints if provided, else fallback to singlePoint logic
+  const points: MeasurementPoint[] = displayPoints 
+    ? displayPoints 
+    : (singlePoint ? [1] : [0, 1, 2]);
   
-  // Fixed 15 levels
-  const depthLevels = Array.from({ length: 15 }, (_, i) => i + 1); 
+  // Fixed 15 levels: 0 to 14
+  const depthLevels = Array.from({ length: 15 }, (_, i) => i); 
 
   const getBgClass = (level: number) => {
     if (level >= 10) return 'bg-[#ff4d4d] text-white'; // Red
@@ -30,7 +33,7 @@ const PocketDepthChart: React.FC<PocketDepthChartProps> = ({ values, onChange, i
   };
 
   return (
-    <div className="flex justify-between px-[2px] w-full bg-white touch-none">
+    <div className="flex justify-between px-[2px] w-full bg-white touch-none relative">
       {points.map((pointIndex) => (
         <div 
           key={pointIndex} 
