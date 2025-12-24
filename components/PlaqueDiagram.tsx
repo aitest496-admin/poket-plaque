@@ -6,9 +6,10 @@ interface PlaqueDiagramProps {
   onChange: (surface: Surface, isActive: boolean) => void;
   onToggleAll: () => void;
   maskedSurfaces?: Surface[]; // Surfaces to render but disable interaction and hide active state
+  variant?: 'standard' | 'simple';
 }
 
-const PlaqueDiagram: React.FC<PlaqueDiagramProps> = ({ value, onChange, onToggleAll, maskedSurfaces = [] }) => {
+const PlaqueDiagram: React.FC<PlaqueDiagramProps> = ({ value, onChange, onToggleAll, maskedSurfaces = [], variant = 'standard' }) => {
   
   const getPathProps = (surface: Surface) => {
     const isMasked = maskedSurfaces.includes(surface);
@@ -39,6 +40,30 @@ const PlaqueDiagram: React.FC<PlaqueDiagramProps> = ({ value, onChange, onToggle
         }
     };
   };
+
+  if (variant === 'simple') {
+    return (
+        <div className="w-full aspect-square flex items-center justify-center bg-white touch-none p-[1px]">
+          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-sm">
+            {/* Top - Buccal */}
+            <path d="M0 0 L100 0 L50 50 Z" {...getPathProps(Surface.Buccal)} />
+            {/* Bottom - Lingual */}
+            <path d="M0 100 L100 100 L50 50 Z" {...getPathProps(Surface.Lingual)} />
+            {/* Left - Mesial */}
+            <path d="M0 0 L0 100 L50 50 Z" {...getPathProps(Surface.Mesial)} />
+            {/* Right - Distal */}
+            <path d="M100 0 L100 100 L50 50 Z" {...getPathProps(Surface.Distal)} />
+            
+            {/* Center - Occlusal/ToggleAll - Invisible touch target unless active */}
+            <circle 
+                cx="50" cy="50" r="14"
+                className={`${value.occlusal ? 'fill-[#ff0000]' : 'fill-transparent hover:fill-slate-200/30'} stroke-none touch-none cursor-pointer`}
+                onPointerDown={(e) => { e.stopPropagation(); onToggleAll(); }}
+            />
+          </svg>
+        </div>
+    );
+  }
 
   // Geometry: 
   // ViewBox 0-100. Center 50.

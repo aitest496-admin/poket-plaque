@@ -5,11 +5,14 @@ interface PocketDepthChartProps {
   values: [number | null, number | null, number | null];
   onChange: (pointIndex: MeasurementPoint, value: number) => void;
   isInverted?: boolean; // If true, 1 is at the top (for Buccal/Bottom section)
+  singlePoint?: boolean;
 }
 
-const PocketDepthChart: React.FC<PocketDepthChartProps> = ({ values, onChange, isInverted = false }) => {
-  const points: MeasurementPoint[] = [0, 1, 2];
-  // 1 to 15
+const PocketDepthChart: React.FC<PocketDepthChartProps> = ({ values, onChange, isInverted = false, singlePoint = false }) => {
+  // If singlePoint, only show index 1 (Center). Otherwise show all 3.
+  const points: MeasurementPoint[] = singlePoint ? [1] : [0, 1, 2];
+  
+  // Fixed 15 levels
   const depthLevels = Array.from({ length: 15 }, (_, i) => i + 1); 
 
   const getBgClass = (level: number) => {

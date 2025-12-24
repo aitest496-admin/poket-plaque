@@ -33,3 +33,5 @@ export enum Surface {
 }
 
 export type MeasurementPoint = 0 | 1 | 2; // 0: Left, 1: Center, 2: Right
+
+export type MeasurementMethod = '1-point' | '4-point' | '6-point';

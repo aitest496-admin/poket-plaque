@@ -5,9 +5,10 @@ interface ThreePointToggleProps {
   values: [boolean, boolean, boolean];
   onChange: (pointIndex: MeasurementPoint, value: boolean) => void;
   type: 'pus' | 'bleeding';
+  singlePoint?: boolean;
 }
 
-const ThreePointToggle: React.FC<ThreePointToggleProps> = ({ values, onChange, type }) => {
+const ThreePointToggle: React.FC<ThreePointToggleProps> = ({ values, onChange, type, singlePoint = false }) => {
   // PoC Colors: Pus = #808080 (Grey), Bleeding = #ff4d4d (Red)
   const activeClass = type === 'pus' ? '!bg-[#808080] text-white' : '!bg-[#ff4d4d] text-white';
   
@@ -17,6 +18,28 @@ const ThreePointToggle: React.FC<ThreePointToggleProps> = ({ values, onChange, t
     }
   };
 
+  // 1-point method: Render only the center block (index 1)
+  if (singlePoint) {
+    const index = 1;
+    const isActive = values[index];
+    return (
+      <div className="flex h-[24px] border-b border-[#ccc] bg-white w-full text-[9px] touch-none">
+        <div
+          onPointerDown={(e) => {
+             e.currentTarget.releasePointerCapture(e.pointerId);
+             onChange(index as MeasurementPoint, !isActive);
+          }}
+          onPointerEnter={(e) => handlePointerEnter(e, index as MeasurementPoint, isActive)}
+          className={`
+            flex-1 cursor-pointer flex items-center justify-center font-bold select-none
+            ${isActive ? activeClass : ''}
+          `}
+        />
+      </div>
+    );
+  }
+
+  // Standard 3-point method
   return (
     <div className="flex h-[24px] border-b border-[#ccc] bg-white w-full text-[9px] touch-none">
       {values.map((isActive, index) => (
