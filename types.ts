@@ -22,6 +22,8 @@ export interface ToothData {
     pus: SurfaceMeasurements<boolean>;
     bleeding: SurfaceMeasurements<boolean>;
     pocketDepth: SurfaceMeasurements<number | null>; 
+
+    isMissing?: boolean; // New: Indicates if the tooth is missing
 }
 
 export enum Surface {

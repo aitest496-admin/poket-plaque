@@ -60,6 +60,17 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
       }
     });
   };
+  
+  // Handler for toggling missing status
+  const handleToggleMissing = () => {
+    const newMissingState = !data.isMissing;
+    onUpdate({ ...data, isMissing: newMissingState });
+    
+    // In 1-point combined view, clicking ID should probably toggle both to keep them visually synced in the UI strip
+    if (method === '1-point' && lowerData && onUpdateLower) {
+        onUpdateLower({ ...lowerData, isMissing: newMissingState });
+    }
+  };
 
   const is1Point = method === '1-point';
   const is4Point = method === '4-point';
@@ -70,6 +81,13 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
   const buccalSinglePoint = is1Point; 
 
   const mobilityBtnClass = `${is1Point ? 'w-[12px] text-[10px]' : 'w-[18px] text-[14px]'} h-full leading-none font-bold flex items-center justify-center text-gray-500 hover:text-black hover:bg-gray-200 rounded`;
+
+  // Missing Overlay Component
+  const MissingOverlay = () => (
+    <div className="absolute inset-0 bg-slate-300/80 z-30 flex items-center justify-center pointer-events-auto cursor-not-allowed">
+        <span className="text-[10px] font-bold text-slate-600 bg-white/50 px-1 rounded transform -rotate-45">欠損</span>
+    </div>
+  );
 
   // === 1-POINT COMBINED VIEW LOGIC (Unchanged) ===
   if (is1Point && lowerData && onUpdateLower) {
@@ -104,7 +122,8 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
     return (
         <div className={`flex-1 flex flex-col border border-[#999] bg-white select-none shadow-sm min-w-[28px] max-w-[45px]`}>
             {/* === UPPER JAW (Top Section) === */}
-            <div className="flex flex-col w-full">
+            <div className="flex flex-col w-full relative">
+                {data.isMissing && <MissingOverlay />}
                 {/* Plaque Diagram (Upper) */}
                 <div className="border-b border-[#ccc] w-full">
                     <PlaqueDiagram 
@@ -133,12 +152,19 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
             </div>
 
             {/* === TOOTH ID === */}
-            <div className="bg-[#666] text-white font-bold py-[2px] text-[12px] text-center border-y border-[#999]">
+            <div 
+                className={`font-bold py-[2px] text-[12px] text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors
+                    ${data.isMissing ? 'bg-black text-slate-500 line-through' : 'bg-[#666] text-white'}
+                `}
+                onClick={handleToggleMissing}
+                title="クリックで欠損歯切替"
+            >
                 {data.id}
             </div>
 
             {/* === LOWER JAW (Bottom Section) === */}
-            <div className="flex flex-col w-full">
+            <div className="flex flex-col w-full relative">
+                {lowerData.isMissing && <MissingOverlay />}
                 {/* Measurements (Lower Buccal) */}
                 {/* Chart (1..15) -> Bleeding -> Pus | Inverted=true puts 1 at top */}
                 <PocketDepthChart 
@@ -184,8 +210,8 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
         return (
             <div className="flex-1 flex flex-col border border-[#999] bg-white select-none shadow-sm min-w-[50px] max-w-[120px]">
                 {/* TOP BLOCK: BUCCAL (2-point, Outer) */}
-                <div className="flex flex-col w-full">
-                    
+                <div className="flex flex-col w-full relative">
+                    {data.isMissing && <MissingOverlay />}
                     {/* 1. Plaque (Most Outer / Top) */}
                     <div className="border-b border-[#ccc] w-full">
                         <PlaqueDiagram value={data.plaque} onChange={handlePlaqueChange} onToggleAll={handlePlaqueToggleAll} variant="simple" />
@@ -214,13 +240,19 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
                 </div>
 
                 {/* TOOTH ID */}
-                <div className="bg-[#666] text-white font-bold py-[2px] text-[12px] text-center border-y border-[#999]">
+                <div 
+                    className={`font-bold py-[2px] text-[12px] text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors
+                        ${data.isMissing ? 'bg-black text-slate-500 line-through' : 'bg-[#666] text-white'}
+                    `}
+                    onClick={handleToggleMissing}
+                    title="クリックで欠損歯切替"
+                >
                     {data.id}
                 </div>
 
                 {/* BOTTOM BLOCK: LINGUAL (2-point, Inner) */}
-                <div className="flex flex-col w-full">
-                    
+                <div className="flex flex-col w-full relative">
+                    {data.isMissing && <MissingOverlay />}
                     {/* 1. Pocket Depth (Lingual) - 2 Points */}
                     <PocketDepthChart 
                         values={data.pocketDepth.lingual} 
@@ -243,8 +275,8 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
         return (
             <div className="flex-1 flex flex-col border border-[#999] bg-white select-none shadow-sm min-w-[50px] max-w-[120px]">
                 {/* TOP BLOCK: LINGUAL (2-point, Inner) */}
-                <div className="flex flex-col w-full">
-                    
+                <div className="flex flex-col w-full relative">
+                    {data.isMissing && <MissingOverlay />}
                     {/* 1. Pus (Lingual) - 2 Points */}
                     <ThreePointToggle type="pus" values={data.pus.lingual} onChange={(idx, val) => updateMeasurement('pus', 'lingual', idx, val)} displayPoints={points4} />
                     
@@ -261,13 +293,19 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
                 </div>
 
                 {/* TOOTH ID */}
-                <div className="bg-[#666] text-white font-bold py-[2px] text-[12px] text-center border-y border-[#999]">
+                <div 
+                    className={`font-bold py-[2px] text-[12px] text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors
+                        ${data.isMissing ? 'bg-black text-slate-500 line-through' : 'bg-[#666] text-white'}
+                    `}
+                    onClick={handleToggleMissing}
+                    title="クリックで欠損歯切替"
+                >
                     {data.id}
                 </div>
 
                 {/* BOTTOM BLOCK: BUCCAL (2-point, Outer) */}
-                <div className="flex flex-col w-full">
-                    
+                <div className="flex flex-col w-full relative">
+                    {data.isMissing && <MissingOverlay />}
                     {/* 1. Pocket Depth (Buccal) - 2 Points */}
                     <PocketDepthChart 
                         values={data.pocketDepth.buccal} 
@@ -309,8 +347,8 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
   // complexAContent: The "Outer" block logic (Contains Plaque/Mobility logic)
   // Now mapped to BUCCAL Data
   const complexAContent = (
-    <div className="flex flex-col w-full">
-       
+    <div className="flex flex-col w-full relative">
+       {data.isMissing && <MissingOverlay />}
        {jaw === 'upper' && (
          <>
           {/* Plaque Diagram (Outer Most) */}
@@ -390,8 +428,8 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
   // complexBContent: The "Inner" block logic
   // Now mapped to LINGUAL Data
   const complexBContent = (
-    <div className="flex flex-col w-full">
-      
+    <div className="flex flex-col w-full relative">
+      {data.isMissing && <MissingOverlay />}
       {jaw === 'upper' ? (
         <>
           <PocketDepthChart 
@@ -425,7 +463,13 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
       {jaw === 'upper' ? complexAContent : complexBContent}
 
       {/* ================= TOOTH ID ================= */}
-      <div className="bg-[#666] text-white font-bold py-[2px] text-[12px] text-center border-y border-[#999]">
+      <div 
+        className={`font-bold py-[2px] text-[12px] text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors
+            ${data.isMissing ? 'bg-black text-slate-500 line-through' : 'bg-[#666] text-white'}
+        `}
+        onClick={handleToggleMissing}
+        title="クリックで欠損歯切替"
+      >
         {data.id}
       </div>
 
