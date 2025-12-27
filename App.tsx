@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Tooth from './components/Tooth';
 import DentalChartPrintView from './components/SixPointPrintView';
 import { ToothData, MeasurementMethod } from './types';
@@ -160,12 +160,24 @@ const App: React.FC = () => {
   const [compareTargetDates, setCompareTargetDates] = useState<string[]>([]);
   const [comparisonData, setComparisonData] = useState<Record<string, any>>({});
 
-  const [zoomLevel, setZoomLevel] = useState(1.0); // Default zoom level for preview
+  const [zoomLevel, setZoomLevel] = useState(0.7); // Default zoom level for preview
   
+  // Height Measurement for Preview Scrolling
+  const previewContentRef = useRef<HTMLDivElement>(null);
+  const [previewContentHeight, setPreviewContentHeight] = useState<number>(0);
+
+  // Pinch Zoom Refs
+  const touchStartDist = useRef<number>(0);
+  const startZoomLevel = useRef<number>(0);
+
   // Modal States
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [markedDates, setMarkedDates] = useState<string[]>([]);
+  const [isSaveConfirmModalOpen, setIsSaveConfirmModalOpen] = useState(false); // New modal for save confirmation
+
+  // Dirty State (Unsaved Changes)
+  const [isDirty, setIsDirty] = useState(false);
 
   // Toast State
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
@@ -204,6 +216,7 @@ const App: React.FC = () => {
                 '6-point': generateFullMouth(),
             });
         }
+        setIsDirty(false); // Reset dirty state on load
     } catch (error) {
         console.error("Failed to load data", error);
         setToast({ message: "データの読み込みに失敗しました", type: 'error' });
@@ -240,9 +253,20 @@ const App: React.FC = () => {
         });
         setToast({ message: "保存しました", type: 'success' });
         await updateMarkedDates(); // Update calendar markers
+        setIsDirty(false); // Reset dirty state on save
+        return true; // Return success
     } catch (error) {
         console.error("Failed to save", error);
         setToast({ message: "保存に失敗しました", type: 'error' });
+        return false;
+    }
+  };
+
+  const handleSaveAndPreview = async () => {
+    const success = await handleSave();
+    if (success) {
+        setIsSaveConfirmModalOpen(false);
+        setIsPreviewMode(true);
     }
   };
 
@@ -257,6 +281,26 @@ const App: React.FC = () => {
     loadDataForDate(selectedDate);
   }, [selectedDate, loadDataForDate, updateMarkedDates]);
 
+  // Observer for Preview Content Height
+  useEffect(() => {
+    if (!isPreviewMode) return;
+    
+    const element = previewContentRef.current;
+    if (!element) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setPreviewContentHeight(entry.contentRect.height);
+      }
+    });
+
+    resizeObserver.observe(element);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [isPreviewMode, isCompareMode, compareTargetDates]); // Re-attach if modes change heavily, though observe persists usually
+
   // --- Handlers ---
 
   const handleToothUpdate = (quadrant: Quadrant, updatedTooth: ToothData) => {
@@ -267,6 +311,7 @@ const App: React.FC = () => {
         [quadrant]: prev[measurementMethod][quadrant].map(t => t.id === updatedTooth.id ? updatedTooth : t)
       }
     }));
+    setIsDirty(true); // Mark as dirty on change
   };
 
   const handleConfirmDelete = async () => {
@@ -275,10 +320,37 @@ const App: React.FC = () => {
       [measurementMethod]: generateFullMouth()
     }));
     setIsDeleteModalOpen(false);
+    setIsDirty(true); // Resetting data is also a change
   };
 
   const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 0.1, 2.0));
   const handleZoomOut = () => setZoomLevel(prev => Math.max(prev - 0.1, 0.3));
+
+  // --- Pinch Zoom Handlers ---
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+        // Calculate initial distance
+        const dist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+        );
+        touchStartDist.current = dist;
+        startZoomLevel.current = zoomLevel;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && touchStartDist.current > 0) {
+        const dist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+        );
+        const scale = dist / touchStartDist.current;
+        // Apply scale to the initial zoom level
+        const newZoom = Math.min(Math.max(startZoomLevel.current * scale, 0.3), 3.0);
+        setZoomLevel(newZoom);
+    }
+  };
 
   const goLeft = () => {
     if (currentQuadrant === 'UL') setCurrentQuadrant('UR');
@@ -368,56 +440,72 @@ const App: React.FC = () => {
   const renderContent = () => {
     if (isPreviewMode) {
       return (
-        <div className="w-full h-full overflow-auto bg-slate-500/20 p-8 flex justify-center items-start print:p-0 print:bg-white print:overflow-visible">
+        <div 
+          className="w-full h-full overflow-auto bg-slate-500/20 print:p-0 print:bg-white print:overflow-visible touch-pan-x touch-pan-y"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={() => { touchStartDist.current = 0; }}
+        >
+          {/* Wrapper for scrolling: ensure min dimensions based on scaled content */}
           <div 
-            className="flex flex-col gap-8 items-center origin-top transition-transform duration-200 shadow-none print:shadow-none print:transform-none"
-            style={{ 
-                transform: `scale(${zoomLevel})`,
-                width: '1100px',     // Fixed width to maintain aspect ratio and preventing reflow on zoom
-                minWidth: '1100px'   
-            }}
+             className="flex justify-center items-start p-8"
+             style={{
+                minWidth: `${(1100 * zoomLevel) + 64}px`, // 1100px base width * zoom + padding
+                minHeight: `${(previewContentHeight * zoomLevel) + 64}px`
+             }}
           >
-            {/* Main Chart (Current Date) */}
-            <div className="bg-white shadow-xl print:shadow-none w-full">
-                <DentalChartPrintView 
-                data={allTeethData[measurementMethod]} 
-                date={selectedDate} 
-                method={measurementMethod}
-                />
-            </div>
+            <div 
+                ref={previewContentRef}
+                className="flex flex-col gap-8 items-center origin-top shadow-none print:shadow-none print:transform-none"
+                style={{ 
+                    transform: `scale(${zoomLevel})`,
+                    transformOrigin: 'top center',
+                    width: '1100px',     // Fixed width to maintain aspect ratio and preventing reflow on zoom
+                    minWidth: '1100px'   
+                }}
+            >
+                {/* Main Chart (Current Date) */}
+                <div className="bg-white shadow-xl print:shadow-none w-full">
+                    <DentalChartPrintView 
+                    data={allTeethData[measurementMethod]} 
+                    date={selectedDate} 
+                    method={measurementMethod}
+                    />
+                </div>
 
-            {/* Comparison Charts */}
-            {isCompareMode && compareTargetDates.map(date => {
-                const dataForDate = comparisonData[date];
-                if (!dataForDate) return null;
-                
-                // dataForDate contains all methods. Use current method for view.
-                const viewData = dataForDate[measurementMethod]; 
+                {/* Comparison Charts */}
+                {isCompareMode && compareTargetDates.map(date => {
+                    const dataForDate = comparisonData[date];
+                    if (!dataForDate) return null;
+                    
+                    // dataForDate contains all methods. Use current method for view.
+                    const viewData = dataForDate[measurementMethod]; 
 
-                return (
-                    <div key={date} className="w-full relative animate-fade-in-up">
-                        {/* Comparison Label/Header */}
-                        <div className="absolute -top-8 left-0 flex items-center gap-2">
-                            <div className="bg-indigo-600 text-white px-4 py-1.5 text-sm font-bold rounded-t-lg shadow-sm flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                </svg>
-                                過去データ: {date.replace(/-/g, '/')}
+                    return (
+                        <div key={date} className="w-full relative animate-fade-in-up">
+                            {/* Comparison Label/Header */}
+                            <div className="absolute -top-8 left-0 flex items-center gap-2">
+                                <div className="bg-indigo-600 text-white px-4 py-1.5 text-sm font-bold rounded-t-lg shadow-sm flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                    </svg>
+                                    過去データ: {date.replace(/-/g, '/')}
+                                </div>
+                            </div>
+
+                            {/* Comparison Chart Body */}
+                            <div className="bg-white shadow-xl border-[6px] border-indigo-200 print:shadow-none print:border-2 print:border-slate-300">
+                                {/* Overlay mask to slightly dim or distinct comparison charts? Optional. Keeping it clear for now. */}
+                                <DentalChartPrintView 
+                                    data={viewData} 
+                                    date={date} 
+                                    method={measurementMethod}
+                                />
                             </div>
                         </div>
-
-                        {/* Comparison Chart Body */}
-                        <div className="bg-white shadow-xl border-[6px] border-indigo-200 print:shadow-none print:border-2 print:border-slate-300">
-                             {/* Overlay mask to slightly dim or distinct comparison charts? Optional. Keeping it clear for now. */}
-                            <DentalChartPrintView 
-                                data={viewData} 
-                                date={date} 
-                                method={measurementMethod}
-                            />
-                        </div>
-                    </div>
-                );
-            })}
+                    );
+                })}
+            </div>
           </div>
         </div>
       );
@@ -570,7 +658,7 @@ const App: React.FC = () => {
                     className={`p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center ${isPreviewMode || isCompareMode ? 'opacity-50 cursor-not-allowed' : ''}`}
                     aria-label="Save"
                     disabled={isPreviewMode || isCompareMode}
-                    onClick={handleSave}
+                    onClick={() => handleSave()}
                     >
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
@@ -614,7 +702,11 @@ const App: React.FC = () => {
                             setIsCompareMode(false); // Reset compare mode on close
                             setCompareTargetDates([]);
                         } else {
-                            setIsPreviewMode(true);
+                            if (isDirty) {
+                                setIsSaveConfirmModalOpen(true);
+                            } else {
+                                setIsPreviewMode(true);
+                            }
                         }
                     }}
                     >
@@ -697,6 +789,41 @@ const App: React.FC = () => {
       <main className="flex-1 w-full flex items-center justify-center overflow-auto relative p-1 md:p-2 bg-slate-100 print:bg-white print:p-0 print:block">
         {renderContent()}
       </main>
+
+      {/* Save Confirmation Modal */}
+      {isSaveConfirmModalOpen && (
+        <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-[2px] print:hidden">
+            <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-200 animate-fade-in-up">
+                <div className="p-5">
+                    <div className="flex items-center gap-3 mb-3 text-indigo-600">
+                        <div className="p-2 bg-indigo-100 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
+                            </svg>
+                        </div>
+                        <h3 className="font-bold text-lg text-slate-800">保存確認</h3>
+                    </div>
+                    <p className="text-slate-600 text-sm leading-relaxed font-bold">
+                        保存してプレビュー画面に移行しますか？
+                    </p>
+                </div>
+                <div className="flex items-center justify-end gap-3 px-5 py-4 bg-slate-50 border-t border-slate-100">
+                    <button 
+                        onClick={() => setIsSaveConfirmModalOpen(false)}
+                        className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+                    >
+                        いいえ
+                    </button>
+                    <button 
+                        onClick={handleSaveAndPreview}
+                        className="px-4 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-all active:scale-95"
+                    >
+                        はい
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal (Hidden on print) */}
       {isDeleteModalOpen && (

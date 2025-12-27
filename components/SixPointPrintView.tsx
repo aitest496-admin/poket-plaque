@@ -40,18 +40,18 @@ const BleedingPusIndicator: React.FC<{ bleeding: boolean, pus: boolean }> = ({ b
 };
 
 // Bleeding/Pus Row Cells
-const BleedingPusCells: React.FC<{ tooth: ToothData, side: 'buccal' | 'lingual', indices: number[], colSpan: number }> = ({ tooth, side, indices, colSpan }) => {
+const BleedingPusCells: React.FC<{ tooth: ToothData, side: 'buccal' | 'lingual', indices: number[], colSpan: number, isCenterSeparator?: boolean, isLastTooth?: boolean }> = ({ tooth, side, indices, colSpan, isCenterSeparator, isLastTooth }) => {
     if (tooth.isMissing) {
         return (
-            <div className={`${baseCellClass} min-h-[12px] bg-slate-300 print:bg-slate-300`} style={{ gridColumn: `span ${colSpan}` }}></div>
+            <div className={`${baseCellClass} min-h-[12px] bg-slate-300 print:bg-slate-300 ${isCenterSeparator ? '!border-r-4' : ''} ${isLastTooth ? '!border-r-0' : ''}`} style={{ gridColumn: `span ${colSpan}` }}></div>
         );
     }
     const bleeding = tooth.bleeding[side];
     const pus = tooth.pus[side];
     return (
         <>
-        {indices.map(idx => (
-             <div key={idx} className={`${baseCellClass} min-h-[12px] flex items-center justify-center`}>
+        {indices.map((idx, i) => (
+             <div key={idx} className={`${baseCellClass} min-h-[12px] flex items-center justify-center ${isCenterSeparator && i === indices.length - 1 ? '!border-r-4' : ''} ${isLastTooth && i === indices.length - 1 ? '!border-r-0' : ''}`}>
                 <BleedingPusIndicator bleeding={bleeding[idx]} pus={pus[idx]} />
              </div>
         ))}
@@ -60,9 +60,9 @@ const BleedingPusCells: React.FC<{ tooth: ToothData, side: 'buccal' | 'lingual',
 }
 
 // Plaque Cell Renderer
-const PlaqueCell: React.FC<{ tooth: ToothData, colSpan: number }> = ({ tooth, colSpan }) => {
+const PlaqueCell: React.FC<{ tooth: ToothData, colSpan: number, isCenterSeparator?: boolean, isLastTooth?: boolean, isLastRow?: boolean }> = ({ tooth, colSpan, isCenterSeparator, isLastTooth, isLastRow }) => {
   if (tooth.isMissing) {
-      return <div className={`${baseCellClass} min-h-[24px] w-full bg-slate-300 print:bg-slate-300`} style={{ gridColumn: `span ${colSpan}` }}></div>;
+      return <div className={`${baseCellClass} min-h-[24px] w-full bg-slate-300 print:bg-slate-300 ${isCenterSeparator ? '!border-r-4' : ''} ${isLastTooth ? '!border-r-0' : ''} ${isLastRow ? '!border-b-0' : ''}`} style={{ gridColumn: `span ${colSpan}` }}></div>;
   }
 
   const { plaque } = tooth;
@@ -71,7 +71,7 @@ const PlaqueCell: React.FC<{ tooth: ToothData, colSpan: number }> = ({ tooth, co
   const strokeClass = "stroke-slate-800 print:stroke-black";
 
   return (
-    <div className={`${baseCellClass} min-h-[24px] w-full`} style={{ gridColumn: `span ${colSpan}` }}>
+    <div className={`${baseCellClass} min-h-[24px] w-full ${isCenterSeparator ? '!border-r-4' : ''} ${isLastTooth ? '!border-r-0' : ''} ${isLastRow ? '!border-b-0' : ''}`} style={{ gridColumn: `span ${colSpan}` }}>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full absolute inset-0 block pointer-events-none">
          <path d="M0 0 L100 0 L50 50 Z" fill={plaque.buccal ? activeColor : inactiveColor} stroke="none" />
          <path d="M0 100 L100 100 L50 50 Z" fill={plaque.lingual ? activeColor : inactiveColor} stroke="none" />
@@ -86,29 +86,29 @@ const PlaqueCell: React.FC<{ tooth: ToothData, colSpan: number }> = ({ tooth, co
 };
 
 // Mobility Cell Renderer
-const MobilityCell: React.FC<{ tooth: ToothData, colSpan: number }> = ({ tooth, colSpan }) => {
+const MobilityCell: React.FC<{ tooth: ToothData, colSpan: number, isCenterSeparator?: boolean, isLastTooth?: boolean }> = ({ tooth, colSpan, isCenterSeparator, isLastTooth }) => {
     if (tooth.isMissing) {
-        return <div className={`${baseCellClass} min-h-[24px] w-full bg-slate-300 print:bg-slate-300`} style={{ gridColumn: `span ${colSpan}` }}></div>;
+        return <div className={`${baseCellClass} min-h-[24px] w-full bg-slate-300 print:bg-slate-300 ${isCenterSeparator ? '!border-r-4' : ''} ${isLastTooth ? '!border-r-0' : ''}`} style={{ gridColumn: `span ${colSpan}` }}></div>;
     }
     return (
-        <div className={`${baseCellClass} min-h-[24px] w-full flex items-center justify-center font-bold`} style={{ gridColumn: `span ${colSpan}` }}>
+        <div className={`${baseCellClass} min-h-[24px] w-full flex items-center justify-center font-bold ${isCenterSeparator ? '!border-r-4' : ''} ${isLastTooth ? '!border-r-0' : ''}`} style={{ gridColumn: `span ${colSpan}` }}>
             {tooth.mobility > 0 ? tooth.mobility : ''}
         </div>
     );
 };
 
 // Measurement Cell Renderer (Depth only)
-const MeasurementCells: React.FC<{ tooth: ToothData, side: 'buccal' | 'lingual', indices: number[], colSpan: number }> = ({ tooth, side, indices, colSpan }) => {
+const MeasurementCells: React.FC<{ tooth: ToothData, side: 'buccal' | 'lingual', indices: number[], colSpan: number, isCenterSeparator?: boolean, isLastTooth?: boolean }> = ({ tooth, side, indices, colSpan, isCenterSeparator, isLastTooth }) => {
   if (tooth.isMissing) {
-      return <div className={`${baseCellClass} min-h-[24px] bg-slate-300 print:bg-slate-300`} style={{ gridColumn: `span ${colSpan}` }}></div>;
+      return <div className={`${baseCellClass} min-h-[24px] bg-slate-300 print:bg-slate-300 ${isCenterSeparator ? '!border-r-4' : ''} ${isLastTooth ? '!border-r-0' : ''}`} style={{ gridColumn: `span ${colSpan}` }}></div>;
   }
 
   const depth = tooth.pocketDepth[side];
 
   return (
     <>
-      {indices.map(idx => (
-          <div key={idx} className={`${baseCellClass} min-h-[24px] ${getDepthColor(depth[idx])} flex items-center justify-center relative`}>
+      {indices.map((idx, i) => (
+          <div key={idx} className={`${baseCellClass} min-h-[24px] ${getDepthColor(depth[idx])} flex items-center justify-center relative ${isCenterSeparator && i === indices.length - 1 ? '!border-r-4' : ''} ${isLastTooth && i === indices.length - 1 ? '!border-r-0' : ''}`}>
             <span className="z-0 text-[10px] font-medium leading-none">{depth[idx]}</span>
           </div>
       ))}
@@ -222,34 +222,34 @@ const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date,
       </div>
 
       {/* Main Table Container */}
-      <div className="border-l-2 border-t-2 border-slate-800 select-none">
+      <div className="border-2 border-slate-800 select-none">
         
         {/* UPPER JAW */}
         <div className="grid" style={gridStyle}>
              {/* Row 1: Plaque */}
              <div className={`${labelClass}`}>プラーク</div>
-             {upperTeeth.map(t => <PlaqueCell key={t.id} tooth={t} colSpan={config.colSpan} />)}
+             {upperTeeth.map((t, i) => <PlaqueCell key={t.id} tooth={t} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === upperTeeth.length - 1} />)}
 
              {/* Row 2: Mobility */}
              <div className={`${labelClass}`} style={{ gridColumn: '1 / 2' }}>動揺度</div>
-             {upperTeeth.map(t => <MobilityCell key={t.id} tooth={t} colSpan={config.colSpan} />)}
+             {upperTeeth.map((t, i) => <MobilityCell key={t.id} tooth={t} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === upperTeeth.length - 1} />)}
 
              {/* Row 3: Bleeding/Pus (Buccal) */}
              <div className={`${labelClass} !text-[8px]`} style={{ gridColumn: '1 / 2' }}>出血・排膿</div>
-             {upperTeeth.map(t => <BleedingPusCells key={t.id} tooth={t} side="buccal" indices={config.indices} colSpan={config.colSpan} />)}
+             {upperTeeth.map((t, i) => <BleedingPusCells key={t.id} tooth={t} side="buccal" indices={config.indices} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === upperTeeth.length - 1} />)}
 
              {/* Row 4: Buccal Pocket */}
              <div className={`${labelClass}`} style={{ gridColumn: '1 / 2' }}>ポケット</div>
-             {upperTeeth.map(t => <MeasurementCells key={t.id} tooth={t} side="buccal" indices={config.indices} colSpan={config.colSpan} />)}
+             {upperTeeth.map((t, i) => <MeasurementCells key={t.id} tooth={t} side="buccal" indices={config.indices} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === upperTeeth.length - 1} />)}
 
              {/* Row 5 & 6: Lingual (Conditional) */}
              {config.showLingual && (
                 <>
                     <div className={`${labelClass}`} style={{ gridColumn: '1 / 2' }}>ポケット</div>
-                    {upperTeeth.map(t => <MeasurementCells key={t.id} tooth={t} side="lingual" indices={config.indices} colSpan={config.colSpan} />)}
+                    {upperTeeth.map((t, i) => <MeasurementCells key={t.id} tooth={t} side="lingual" indices={config.indices} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === upperTeeth.length - 1} />)}
 
                     <div className={`${labelClass} !text-[8px]`} style={{ gridColumn: '1 / 2' }}>出血・排膿</div>
-                    {upperTeeth.map(t => <BleedingPusCells key={t.id} tooth={t} side="lingual" indices={config.indices} colSpan={config.colSpan} />)}
+                    {upperTeeth.map((t, i) => <BleedingPusCells key={t.id} tooth={t} side="lingual" indices={config.indices} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === upperTeeth.length - 1} />)}
                 </>
              )}
         </div>
@@ -257,8 +257,8 @@ const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date,
         {/* MIDDLE STRIP: TOOTH IDs */}
         <div className="grid grid-cols-[40px_repeat(16,_1fr)] bg-slate-100 h-6 print:bg-slate-200">
             <div className={`${labelClass} bg-transparent`}>部位</div>
-            {upperTeeth.map(t => (
-                <div key={t.id} className={`flex items-center justify-center font-bold text-sm border-r border-b border-slate-800 print:border-black ${t.isMissing ? 'bg-black text-slate-500 line-through print:bg-black print:text-white' : ''}`}>
+            {upperTeeth.map((t, i) => (
+                <div key={t.id} className={`flex items-center justify-center font-bold text-sm border-r border-b border-slate-800 print:border-black ${t.isMissing ? 'bg-black text-slate-500 line-through print:bg-black print:text-white' : ''} ${i === 7 ? '!border-r-4' : ''} ${i === upperTeeth.length - 1 ? '!border-r-0' : ''}`}>
                     {t.id}
                 </div>
             ))}
@@ -270,28 +270,28 @@ const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date,
              {config.showLingual && (
                 <>
                     <div className={`${labelClass} !text-[8px]`} style={{ gridColumn: '1 / 2' }}>出血・排膿</div>
-                    {lowerTeeth.map(t => <BleedingPusCells key={t.id} tooth={t} side="lingual" indices={config.indices} colSpan={config.colSpan} />)}
+                    {lowerTeeth.map((t, i) => <BleedingPusCells key={t.id} tooth={t} side="lingual" indices={config.indices} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === lowerTeeth.length - 1} />)}
 
                     <div className={`${labelClass}`} style={{ gridColumn: '1 / 2' }}>ポケット</div>
-                    {lowerTeeth.map(t => <MeasurementCells key={t.id} tooth={t} side="lingual" indices={config.indices} colSpan={config.colSpan} />)}
+                    {lowerTeeth.map((t, i) => <MeasurementCells key={t.id} tooth={t} side="lingual" indices={config.indices} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === lowerTeeth.length - 1} />)}
                 </>
              )}
 
              {/* Row 3: Buccal Pocket */}
              <div className={`${labelClass}`} style={{ gridColumn: '1 / 2' }}>ポケット</div>
-             {lowerTeeth.map(t => <MeasurementCells key={t.id} tooth={t} side="buccal" indices={config.indices} colSpan={config.colSpan} />)}
+             {lowerTeeth.map((t, i) => <MeasurementCells key={t.id} tooth={t} side="buccal" indices={config.indices} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === lowerTeeth.length - 1} />)}
 
              {/* Row 4: Bleeding/Pus (Buccal) */}
              <div className={`${labelClass} !text-[8px]`} style={{ gridColumn: '1 / 2' }}>出血・排膿</div>
-             {lowerTeeth.map(t => <BleedingPusCells key={t.id} tooth={t} side="buccal" indices={config.indices} colSpan={config.colSpan} />)}
+             {lowerTeeth.map((t, i) => <BleedingPusCells key={t.id} tooth={t} side="buccal" indices={config.indices} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === lowerTeeth.length - 1} />)}
 
              {/* Row 5: Mobility */}
              <div className={`${labelClass}`} style={{ gridColumn: '1 / 2' }}>動揺度</div>
-             {lowerTeeth.map(t => <MobilityCell key={t.id} tooth={t} colSpan={config.colSpan} />)}
+             {lowerTeeth.map((t, i) => <MobilityCell key={t.id} tooth={t} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === lowerTeeth.length - 1} />)}
 
              {/* Row 6: Plaque */}
-             <div className={`${labelClass}`} style={{ gridColumn: '1 / 2' }}>プラーク</div>
-             {lowerTeeth.map(t => <PlaqueCell key={t.id} tooth={t} colSpan={config.colSpan} />)}
+             <div className={`${labelClass} !border-b-0`} style={{ gridColumn: '1 / 2' }}>プラーク</div>
+             {lowerTeeth.map((t, i) => <PlaqueCell key={t.id} tooth={t} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === lowerTeeth.length - 1} isLastRow={true} />)}
         </div>
 
       </div>
