@@ -148,7 +148,7 @@ const SideLabels = ({ jaw }: { jaw: 'upper' | 'lower' }) => {
 
 const App: React.FC = () => {
   const [currentQuadrant, setCurrentQuadrant] = useState<Quadrant>('UL');
-  const [measurementMethod, setMeasurementMethod] = useState<MeasurementMethod>('6-point');
+  const [measurementMethod, setMeasurementMethod] = useState<MeasurementMethod>('1-point');
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   
   // Preview Mode State
@@ -653,11 +653,11 @@ const App: React.FC = () => {
             
             <div className="flex items-center gap-2">
                 {/* 保存アイコン */}
+                {!isPreviewMode && (
                 <WithTooltip label="保存">
                     <button 
-                    className={`p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center ${isPreviewMode || isCompareMode ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center`}
                     aria-label="Save"
-                    disabled={isPreviewMode || isCompareMode}
                     onClick={() => handleSave()}
                     >
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
@@ -665,6 +665,7 @@ const App: React.FC = () => {
                     </svg>
                     </button>
                 </WithTooltip>
+                )}
 
                 {/* 比較アイコン (New) - Visible only in Preview Mode */}
                 {isPreviewMode && (
