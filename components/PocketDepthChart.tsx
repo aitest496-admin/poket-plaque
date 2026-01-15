@@ -3,7 +3,7 @@ import { MeasurementPoint } from '../types';
 
 interface PocketDepthChartProps {
   values: [number | null, number | null, number | null];
-  onChange: (pointIndex: MeasurementPoint, value: number) => void;
+  onChange: (pointIndex: MeasurementPoint, value: number | null) => void;
   isInverted?: boolean; // If true, 0 is at the top (for Buccal/Bottom section)
   singlePoint?: boolean;
   displayPoints?: MeasurementPoint[];
@@ -15,8 +15,8 @@ const PocketDepthChart: React.FC<PocketDepthChartProps> = ({ values, onChange, i
     ? displayPoints 
     : (singlePoint ? [1] : [0, 1, 2]);
   
-  // Fixed 15 levels: 0 to 14
-  const depthLevels = Array.from({ length: 15 }, (_, i) => i); 
+  // Fixed 13 levels: 0 to 12. 13 and 14 are replaced by input.
+  const depthLevels = Array.from({ length: 13 }, (_, i) => i); 
 
   const getBgClass = (level: number) => {
     if (level >= 10) return 'bg-[#ff4d4d] text-white'; // Red
@@ -60,6 +60,32 @@ const PocketDepthChart: React.FC<PocketDepthChartProps> = ({ values, onChange, i
               </div>
             );
           })}
+          
+          {/* Input for manual entry (replacing 13 & 14) */}
+          <input 
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            className={`
+               h-[39px] border border-[#ccc] mb-[0.5px] w-full 
+               text-center text-[12px] font-bold bg-slate-50 
+               focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 rounded-none p-0
+            `}
+            value={values[pointIndex] ?? ''}
+            onChange={(e) => {
+                const val = e.target.value;
+                if (val === '') {
+                    onChange(pointIndex, null);
+                } else {
+                    const num = Number(val);
+                    if (!isNaN(num)) {
+                        onChange(pointIndex, num);
+                    }
+                }
+            }}
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()} // Enable interaction with input
+          />
         </div>
       ))}
     </div>
