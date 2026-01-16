@@ -13,6 +13,12 @@ interface ToothProps {
   method: MeasurementMethod;
 }
 
+const formatToothId = (id: number, isPrimary?: boolean) => {
+  if (!isPrimary) return id;
+  const map = ['A', 'B', 'C', 'D', 'E'];
+  return map[id - 1] ?? id;
+};
+
 const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower, jaw, method }) => {
   
   const handlePlaqueChange = (surface: Surface, isActive: boolean) => {
@@ -61,14 +67,36 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
     });
   };
   
-  // Handler for toggling missing status
-  const handleToggleMissing = () => {
-    const newMissingState = !data.isMissing;
-    onUpdate({ ...data, isMissing: newMissingState });
+  // Handler for toggling status
+  const handleStatusChange = () => {
+    let nextState = { isMissing: false, isPrimary: false };
+    
+    // Logic for 6, 7, 8: Cycle Permanent -> Missing -> Permanent (No Primary option)
+    if (data.id >= 6) {
+        if (data.isMissing) {
+            nextState = { isMissing: false, isPrimary: false };
+        } else {
+            nextState = { isMissing: true, isPrimary: false };
+        }
+    } else {
+        // Logic for 1-5: Cycle Normal(Permanent) -> Missing -> Primary -> Normal
+        if (data.isMissing) {
+            // Missing -> Primary
+            nextState = { isMissing: false, isPrimary: true };
+        } else if (data.isPrimary) {
+            // Primary -> Permanent
+            nextState = { isMissing: false, isPrimary: false };
+        } else {
+            // Permanent -> Missing
+            nextState = { isMissing: true, isPrimary: false };
+        }
+    }
+
+    onUpdate({ ...data, ...nextState });
     
     // In 1-point combined view, clicking ID should probably toggle both to keep them visually synced in the UI strip
     if (method === '1-point' && lowerData && onUpdateLower) {
-        onUpdateLower({ ...lowerData, isMissing: newMissingState });
+        onUpdateLower({ ...lowerData, ...nextState });
     }
   };
 
@@ -88,6 +116,13 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
         <span className="text-[10px] font-bold text-slate-600 bg-white/50 px-1 rounded transform -rotate-45">欠損</span>
     </div>
   );
+
+  // Helper for ID styling
+  const getIdClass = (t: ToothData) => {
+      if (t.isMissing) return 'bg-black text-slate-500 line-through';
+      if (t.isPrimary) return 'bg-green-600 text-white';
+      return 'bg-[#666] text-white';
+  };
 
   // === 1-POINT COMBINED VIEW LOGIC (Unchanged) ===
   if (is1Point && lowerData && onUpdateLower) {
@@ -153,13 +188,11 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
 
             {/* === TOOTH ID === */}
             <div 
-                className={`font-bold py-[2px] text-[12px] text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors
-                    ${data.isMissing ? 'bg-black text-slate-500 line-through' : 'bg-[#666] text-white'}
-                `}
-                onClick={handleToggleMissing}
-                title="クリックで欠損歯切替"
+                className={`font-bold py-[2px] text-[12px] text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
+                onClick={handleStatusChange}
+                title="クリックで状態切替 (永久歯/欠損/乳歯)"
             >
-                {data.id}
+                {formatToothId(data.id, data.isPrimary)}
             </div>
 
             {/* === LOWER JAW (Bottom Section) === */}
@@ -241,13 +274,11 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
 
                 {/* TOOTH ID */}
                 <div 
-                    className={`font-bold py-[2px] text-[12px] text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors
-                        ${data.isMissing ? 'bg-black text-slate-500 line-through' : 'bg-[#666] text-white'}
-                    `}
-                    onClick={handleToggleMissing}
-                    title="クリックで欠損歯切替"
+                    className={`font-bold py-[2px] text-[12px] text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
+                    onClick={handleStatusChange}
+                    title="クリックで状態切替 (永久歯/欠損/乳歯)"
                 >
-                    {data.id}
+                    {formatToothId(data.id, data.isPrimary)}
                 </div>
 
                 {/* BOTTOM BLOCK: LINGUAL (2-point, Inner) */}
@@ -294,13 +325,11 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
 
                 {/* TOOTH ID */}
                 <div 
-                    className={`font-bold py-[2px] text-[12px] text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors
-                        ${data.isMissing ? 'bg-black text-slate-500 line-through' : 'bg-[#666] text-white'}
-                    `}
-                    onClick={handleToggleMissing}
-                    title="クリックで欠損歯切替"
+                    className={`font-bold py-[2px] text-[12px] text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
+                    onClick={handleStatusChange}
+                    title="クリックで状態切替 (永久歯/欠損/乳歯)"
                 >
-                    {data.id}
+                    {formatToothId(data.id, data.isPrimary)}
                 </div>
 
                 {/* BOTTOM BLOCK: BUCCAL (2-point, Outer) */}
@@ -464,13 +493,11 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
 
       {/* ================= TOOTH ID ================= */}
       <div 
-        className={`font-bold py-[2px] text-[12px] text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors
-            ${data.isMissing ? 'bg-black text-slate-500 line-through' : 'bg-[#666] text-white'}
-        `}
-        onClick={handleToggleMissing}
-        title="クリックで欠損歯切替"
+        className={`font-bold py-[2px] text-[12px] text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
+        onClick={handleStatusChange}
+        title="クリックで状態切替 (永久歯/欠損/乳歯)"
       >
-        {data.id}
+        {formatToothId(data.id, data.isPrimary)}
       </div>
 
       {/* BOTTOM BLOCK */}

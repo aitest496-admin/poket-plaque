@@ -12,6 +12,12 @@ interface DentalChartPrintViewProps {
   method: MeasurementMethod;
 }
 
+const formatToothId = (id: number, isPrimary?: boolean) => {
+  if (!isPrimary) return id;
+  const map = ['A', 'B', 'C', 'D', 'E'];
+  return map[id - 1] ?? id;
+};
+
 // Collapsed border model: Cells have Right and Bottom borders. Container has Top and Left.
 const baseCellClass = "border-r border-b border-slate-800 text-center text-xs relative p-0 overflow-hidden h-full print:border-black";
 
@@ -258,8 +264,8 @@ const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date,
         <div className="grid grid-cols-[40px_repeat(16,_1fr)] bg-slate-100 h-6 print:bg-slate-200">
             <div className={`${labelClass} bg-transparent`}>部位</div>
             {upperTeeth.map((t, i) => (
-                <div key={t.id} className={`flex items-center justify-center font-bold text-sm border-r border-b border-slate-800 print:border-black ${t.isMissing ? 'bg-black text-slate-500 line-through print:bg-black print:text-white' : ''} ${i === 7 ? '!border-r-4' : ''} ${i === upperTeeth.length - 1 ? '!border-r-0' : ''}`}>
-                    {t.id}
+                <div key={t.id} className={`flex items-center justify-center font-bold text-sm border-r border-b border-slate-800 print:border-black ${t.isMissing ? 'bg-black text-slate-500 line-through print:bg-black print:text-white' : t.isPrimary ? 'bg-green-600 text-white print:bg-green-600' : ''} ${i === 7 ? '!border-r-4' : ''} ${i === upperTeeth.length - 1 ? '!border-r-0' : ''}`}>
+                    {formatToothId(t.id, t.isPrimary)}
                 </div>
             ))}
         </div>
@@ -301,6 +307,7 @@ const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date,
         <div className="flex items-center gap-1"><div className="w-3 h-3 bg-[#ff4d4d] border border-black"></div> 出血</div>
         <div className="flex items-center gap-1"><div className="w-3 h-3 bg-[#808080] border border-black"></div> 排膿</div>
         <div className="flex items-center gap-1"><div className="w-3 h-3 flex"><div className="w-1.5 bg-[#ff4d4d]"></div><div className="w-1.5 bg-[#808080]"></div></div> 出血+排膿</div>
+        <div className="flex items-center gap-1"><div className="w-3 h-3 bg-green-600 border border-black"></div> 乳歯</div>
         
         <div className="font-bold ml-2">BOP {stats.bop}%</div>
 

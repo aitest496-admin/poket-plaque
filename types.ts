@@ -23,7 +23,8 @@ export interface ToothData {
     bleeding: SurfaceMeasurements<boolean>;
     pocketDepth: SurfaceMeasurements<number | null>; 
 
-    isMissing?: boolean; // New: Indicates if the tooth is missing
+    isMissing?: boolean; // Indicates if the tooth is missing
+    isPrimary?: boolean; // New: Indicates if the tooth is a primary tooth
 }
 
 export enum Surface {

@@ -14,6 +14,7 @@ const createTooth = (id: number): ToothData => ({
   bleeding: { buccal: [false, false, false], lingual: [false, false, false] },
   pocketDepth: { buccal: [null, null, null], lingual: [null, null, null] },
   isMissing: false,
+  isPrimary: false,
 });
 
 // Helper to generate a range of teeth
@@ -102,28 +103,32 @@ const MiniMap: React.FC<{ current: Quadrant; onSelect: (q: Quadrant) => void; di
   );
 };
 
-const MethodTab: React.FC<{ current: MeasurementMethod; onChange: (m: MeasurementMethod) => void }> = ({ current, onChange }) => {
-  const Tab = ({ method, label }: { method: MeasurementMethod; label: string }) => {
-    const isActive = current === method;
-    return (
-      <button
-        onClick={() => onChange(method)}
-        className={`px-3 shrink-0 py-1 text-xs font-medium rounded-full transition-all duration-200 select-none text-center
-          ${isActive 
-            ? 'bg-white text-blue-600 shadow-sm ring-1 ring-slate-200' 
-            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}
-        `}
-      >
-        {label}
-      </button>
-    );
-  };
-
+const MethodSelector: React.FC<{ current: MeasurementMethod; onChange: (m: MeasurementMethod) => void }> = ({ current, onChange }) => {
   return (
-    <div className="flex bg-slate-100 p-1 rounded-full border border-slate-200/60 shadow-inner items-center overflow-x-auto no-scrollbar">
-      <Tab method="1-point" label="1点法" />
-      <Tab method="4-point" label="4点法" />
-      <Tab method="6-point" label="6点法" />
+    <div className="relative inline-block text-left h-9">
+      <select
+        value={current}
+        onChange={(e) => onChange(e.target.value as MeasurementMethod)}
+        className="
+            cursor-pointer appearance-none h-full
+            bg-slate-50 border border-slate-200 hover:bg-white
+            text-slate-700 text-xs font-bold 
+            rounded-lg shadow-inner
+            pl-3 pr-8 py-0
+            focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
+            transition-all
+            flex items-center
+        "
+      >
+        <option value="1-point">1点法</option>
+        <option value="4-point">4点法</option>
+        <option value="6-point">6点法</option>
+      </select>
+      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+        <svg className="fill-current h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+            <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+        </svg>
+      </div>
     </div>
   );
 };
@@ -312,6 +317,43 @@ const App: React.FC = () => {
       }
     }));
     setIsDirty(true); // Mark as dirty on change
+  };
+
+  // Bulk Status Update Handler
+  const handleBulkStatusChange = (mode: 'all_missing' | 'all_primary' | 'reset') => {
+    setAllTeethData(prev => {
+      const currentData = prev[measurementMethod];
+      const quadrants: Quadrant[] = ['UL', 'UR', 'LL', 'LR'];
+      
+      const newMethodData = { ...currentData };
+
+      quadrants.forEach(quad => {
+        newMethodData[quad] = newMethodData[quad].map(tooth => {
+           let updates: Partial<ToothData> = {};
+           
+           if (mode === 'all_missing') {
+             updates = { isMissing: true, isPrimary: false };
+           } else if (mode === 'reset') {
+             updates = { isMissing: false, isPrimary: false };
+           } else if (mode === 'all_primary') {
+             // 1-5 to Primary (A-E), 6-8 to Missing
+             if (tooth.id <= 5) {
+                updates = { isMissing: false, isPrimary: true };
+             } else {
+                updates = { isMissing: true, isPrimary: false };
+             }
+           }
+           
+           return { ...tooth, ...updates };
+        });
+      });
+
+      return {
+        ...prev,
+        [measurementMethod]: newMethodData
+      };
+    });
+    setIsDirty(true);
   };
 
   const handleConfirmDelete = async () => {
@@ -648,8 +690,16 @@ const App: React.FC = () => {
         <div className="max-w-full mx-auto grid grid-cols-3 items-center gap-4">
           
           {/* Column 1: Tabs, Save, Compare, Preview - Left aligned, spread */}
-          <div className="flex justify-between items-center pr-2">
-            <MethodTab current={measurementMethod} onChange={setMeasurementMethod} />
+          <div className="flex items-center pr-2 gap-3">
+            {/* MiniMap moved to Left Edge */}
+            <div className={`${measurementMethod === '1-point' || isPreviewMode || isCompareMode ? 'hidden' : 'block'}`}>
+                <MiniMap 
+                current={currentQuadrant} 
+                onSelect={setCurrentQuadrant} 
+                />
+            </div>
+
+            <MethodSelector current={measurementMethod} onChange={setMeasurementMethod} />
             
             <div className="flex items-center gap-2">
                 {/* 保存アイコン */}
@@ -761,7 +811,37 @@ const App: React.FC = () => {
           </div>
 
           {/* Column 3: Delete Button and MiniMap - Right aligned, spread */}
-          <div className="flex justify-between items-center pl-2">
+          <div className="flex justify-end items-center pl-2 gap-3">
+             {/* Bulk Status Buttons - only visible in Edit mode */}
+            {!isPreviewMode && !isCompareMode && (
+                <div className="flex items-center gap-1">
+                    <WithTooltip label="全顎を欠損にします">
+                        <button 
+                            onClick={() => handleBulkStatusChange('all_missing')} 
+                            className="h-9 px-2 text-xs font-bold bg-white text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-colors"
+                        >
+                            全顎欠損
+                        </button>
+                    </WithTooltip>
+                    <WithTooltip label="1-5番を乳歯、6-8番を欠損にします">
+                        <button 
+                            onClick={() => handleBulkStatusChange('all_primary')} 
+                            className="h-9 px-2 text-xs font-bold bg-white text-green-600 border border-slate-200 rounded-lg hover:bg-green-50 hover:text-green-700 shadow-sm transition-colors"
+                        >
+                            全顎乳歯
+                        </button>
+                    </WithTooltip>
+                    <WithTooltip label="全ての歯を永久歯に戻します">
+                        <button 
+                            onClick={() => handleBulkStatusChange('reset')} 
+                            className="h-9 px-2 text-xs font-bold bg-white text-blue-600 border border-slate-200 rounded-lg hover:bg-blue-50 hover:text-blue-700 shadow-sm transition-colors"
+                        >
+                            リセット
+                        </button>
+                    </WithTooltip>
+                </div>
+            )}
+
             {/* 削除アイコン: 検査履歴とMAPの間に配置 */}
             <WithTooltip label="データ削除" className={isPreviewMode || isCompareMode ? 'invisible' : ''}>
                 <button 
@@ -775,13 +855,6 @@ const App: React.FC = () => {
                 </svg>
                 </button>
             </WithTooltip>
-
-            <div className={`${measurementMethod === '1-point' || isPreviewMode || isCompareMode ? 'invisible pointer-events-none' : ''}`}>
-                <MiniMap 
-                current={currentQuadrant} 
-                onSelect={setCurrentQuadrant} 
-                />
-            </div>
           </div>
         </div>
       </header>
