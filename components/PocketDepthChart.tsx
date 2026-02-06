@@ -39,29 +39,7 @@ const PocketDepthChart: React.FC<PocketDepthChartProps> = ({ values, onChange, i
           key={pointIndex} 
           className={`flex flex-1 mx-[1px] ${isInverted ? 'flex-col' : 'flex-col-reverse'}`}
         >
-          {depthLevels.map((level) => {
-            const isSelected = values[pointIndex] === level;
-            return (
-              <div
-                key={level}
-                onPointerDown={(e) => {
-                    e.currentTarget.releasePointerCapture(e.pointerId); // Allow smooth dragging across elements
-                    onChange(pointIndex, level);
-                }}
-                onPointerEnter={(e) => handlePointerEnter(e, pointIndex, level)}
-                className={`
-                  h-[19px] border border-[#ccc] mb-[0.5px]
-                  flex items-center justify-center text-[10px] cursor-pointer select-none
-                  ${getBgClass(level)}
-                  ${isSelected ? 'border-[2px] border-[#0000ff] relative z-10 font-bold' : ''}
-                `}
-              >
-                {level}
-              </div>
-            );
-          })}
-          
-          {/* Input for manual entry (replacing 13 & 14) */}
+          {/* Input for manual entry (Placed closest to Tooth ID) */}
           <input 
             type="text"
             inputMode="numeric"
@@ -86,6 +64,28 @@ const PocketDepthChart: React.FC<PocketDepthChartProps> = ({ values, onChange, i
             onClick={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()} // Enable interaction with input
           />
+
+          {depthLevels.map((level) => {
+            const isSelected = values[pointIndex] === level;
+            return (
+              <div
+                key={level}
+                onPointerDown={(e) => {
+                    e.currentTarget.releasePointerCapture(e.pointerId); // Allow smooth dragging across elements
+                    onChange(pointIndex, level);
+                }}
+                onPointerEnter={(e) => handlePointerEnter(e, pointIndex, level)}
+                className={`
+                  h-[19px] border border-[#ccc] mb-[0.5px]
+                  flex items-center justify-center text-[10px] cursor-pointer select-none
+                  ${getBgClass(level)}
+                  ${isSelected ? 'border-[2px] border-[#0000ff] relative z-10 font-bold' : ''}
+                `}
+              >
+                {level}
+              </div>
+            );
+          })}
         </div>
       ))}
     </div>
