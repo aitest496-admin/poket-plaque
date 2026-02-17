@@ -3,6 +3,7 @@ import { ToothData, Surface, MeasurementPoint, MeasurementMethod } from '../type
 import PlaqueDiagram from './PlaqueDiagram';
 import ThreePointToggle from './ThreePointToggle';
 import PocketDepthChart from './PocketDepthChart';
+import { formatToothId } from '../utils/dentalUtils';
 
 interface ToothProps {
   data: ToothData;
@@ -12,12 +13,6 @@ interface ToothProps {
   jaw: 'upper' | 'lower';
   method: MeasurementMethod;
 }
-
-const formatToothId = (id: number, isPrimary?: boolean) => {
-  if (!isPrimary) return id;
-  const map = ['A', 'B', 'C', 'D', 'E'];
-  return map[id - 1] ?? id;
-};
 
 const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower, jaw, method }) => {
 
