@@ -305,13 +305,13 @@ const App: React.FC = () => {
   // };
 
   const goLeft = () => {
-    if (currentQuadrant === 'UL') setCurrentQuadrant('UR');
-    if (currentQuadrant === 'LL') setCurrentQuadrant('LR');
+    if (currentQuadrant === 'UR') setCurrentQuadrant('UL');
+    if (currentQuadrant === 'LR') setCurrentQuadrant('LL');
   };
 
   const goRight = () => {
-    if (currentQuadrant === 'UR') setCurrentQuadrant('UL');
-    if (currentQuadrant === 'LR') setCurrentQuadrant('LL');
+    if (currentQuadrant === 'UL') setCurrentQuadrant('UR');
+    if (currentQuadrant === 'LL') setCurrentQuadrant('LR');
   };
 
   const goDown = () => {
