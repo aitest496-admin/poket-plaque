@@ -3,7 +3,6 @@ import { ToothData, Surface, MeasurementPoint, MeasurementMethod } from '../type
 import PlaqueDiagram from './PlaqueDiagram';
 import ThreePointToggle from './ThreePointToggle';
 import PocketDepthChart from './PocketDepthChart';
-import { formatToothId } from '../utils/dentalUtils';
 
 interface ToothProps {
   data: ToothData;
@@ -13,6 +12,12 @@ interface ToothProps {
   jaw: 'upper' | 'lower';
   method: MeasurementMethod;
 }
+
+const formatToothId = (id: number, isPrimary?: boolean) => {
+  if (!isPrimary) return id;
+  const map = ['A', 'B', 'C', 'D', 'E'];
+  return map[id - 1] ?? id;
+};
 
 const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower, jaw, method }) => {
 
@@ -88,28 +93,6 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
     }
 
     onUpdate({ ...data, ...nextState });
-  };
-
-  // Handler for toggling lower jaw status (1-point mode)
-  const handleLowerStatusChange = () => {
-    if (!lowerData || !onUpdateLower) return;
-    let nextState = { isMissing: false, isPrimary: false };
-    if (lowerData.id >= 6) {
-      if (lowerData.isMissing) {
-        nextState = { isMissing: false, isPrimary: false };
-      } else {
-        nextState = { isMissing: true, isPrimary: false };
-      }
-    } else {
-      if (lowerData.isMissing) {
-        nextState = { isMissing: false, isPrimary: true };
-      } else if (lowerData.isPrimary) {
-        nextState = { isMissing: false, isPrimary: false };
-      } else {
-        nextState = { isMissing: true, isPrimary: false };
-      }
-    }
-    onUpdateLower({ ...lowerData, ...nextState });
   };
 
   const is1Point = method === '1-point';
@@ -198,18 +181,36 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
           />
         </div>
 
-        {/* === TOOTH ID (Upper) === */}
+        {/* === TOOTH ID (上顎) === */}
         <div
-          className={`font-bold py-[5px] text-[11px] text-center border-t border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
+          className={`font-bold py-[2px] text-[12px] text-center border-b border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
           onClick={handleStatusChange}
           title="上顎: クリックで状態切替 (永久歯/欠損/乳歯)"
         >
           {formatToothId(data.id, data.isPrimary)}
         </div>
-        {/* === TOOTH ID (Lower) === */}
+        {/* === TOOTH ID (下顎) === */}
         <div
-          className={`font-bold py-[5px] text-[11px] text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(lowerData)}`}
-          onClick={handleLowerStatusChange}
+          className={`font-bold py-[2px] text-[12px] text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(lowerData)}`}
+          onClick={() => {
+            let nextState = { isMissing: false, isPrimary: false };
+            if (lowerData.id >= 6) {
+              if (lowerData.isMissing) {
+                nextState = { isMissing: false, isPrimary: false };
+              } else {
+                nextState = { isMissing: true, isPrimary: false };
+              }
+            } else {
+              if (lowerData.isMissing) {
+                nextState = { isMissing: false, isPrimary: true };
+              } else if (lowerData.isPrimary) {
+                nextState = { isMissing: false, isPrimary: false };
+              } else {
+                nextState = { isMissing: true, isPrimary: false };
+              }
+            }
+            onUpdateLower({ ...lowerData, ...nextState });
+          }}
           title="下顎: クリックで状態切替 (永久歯/欠損/乳歯)"
         >
           {formatToothId(lowerData.id, lowerData.isPrimary)}

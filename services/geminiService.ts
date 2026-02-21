@@ -7,19 +7,19 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 export const analyzeDentalChart = async (teeth: ToothData[]): Promise<string> => {
   try {
     const model = "gemini-2.5-flash";
-    
+
     // Filter to only teeth that have some data
-    const activeTeeth = teeth.filter(t => 
-        t.mobility > 0 || 
-        Object.values(t.plaque).some(Boolean) ||
-        t.bleeding.buccal.some(Boolean) || t.bleeding.lingual.some(Boolean) ||
-        t.pus.buccal.some(Boolean) || t.pus.lingual.some(Boolean) ||
-        t.pocketDepth.buccal.some(d => d !== null && d > 3) ||
-        t.pocketDepth.lingual.some(d => d !== null && d > 3)
+    const activeTeeth = teeth.filter(t =>
+      t.mobility > 0 ||
+      Object.values(t.plaque).some(Boolean) ||
+      t.bleeding.buccal.some(Boolean) || t.bleeding.lingual.some(Boolean) ||
+      t.pus.buccal.some(Boolean) || t.pus.lingual.some(Boolean) ||
+      t.pocketDepth.buccal.some(d => d !== null && d > 3) ||
+      t.pocketDepth.lingual.some(d => d !== null && d > 3)
     );
 
     if (activeTeeth.length === 0) {
-        return "No significant findings recorded in the chart.";
+      return "No significant findings recorded in the chart.";
     }
 
     const prompt = `
