@@ -1,10 +1,16 @@
 import { GoogleGenAI } from "@google/genai";
 import { ToothData } from "../types";
 
-// Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
+// Initialize Gemini Client inside the function to get the latest key from localStorage
 export const analyzeDentalChart = async (teeth: ToothData[]): Promise<string> => {
+  const apiKey = localStorage.getItem('GEMINI_API_KEY');
+  
+  if (!apiKey) {
+    return "APIキーが設定されていません。右上の設定アイコン（歯車）からGemini APIキーを入力してください。";
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
+  
   try {
     const model = "gemini-2.5-flash";
 
