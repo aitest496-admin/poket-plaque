@@ -8,6 +8,8 @@ export interface ChartRecord {
   date: string; // Key
   data: Record<MeasurementMethod, { UL: ToothData[]; UR: ToothData[]; LL: ToothData[]; LR: ToothData[] }>;
   updatedAt: number;
+  startTime?: string;
+  endTime?: string;
 }
 
 // Open Database Helper

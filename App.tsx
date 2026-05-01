@@ -6,6 +6,15 @@ import { ToothData, MeasurementMethod } from './types';
 import { DentalDB } from './services/db';
 import CalendarModal from './components/CalendarModal';
 import SettingsModal from './components/SettingsModal';
+import ExaminerModal, { Examiner } from './components/ExaminerModal';
+
+const mockExaminers: Examiner[] = [
+    { id: '1', name: '山田 太郎', color: 'bg-blue-600' },
+    { id: '2', name: '鈴木 和子', color: 'bg-emerald-600' },
+    { id: '3', name: '佐藤 健一', color: 'bg-amber-500' },
+    { id: '4', name: '田中 美香', color: 'bg-rose-500' },
+    { id: '5', name: '伊藤 隆', color: 'bg-indigo-600' },
+];
 
 // Helper to create a single tooth
 const createTooth = (id: number): ToothData => ({
@@ -159,6 +168,68 @@ const App: React.FC = () => {
     const [measurementMethod, setMeasurementMethod] = useState<MeasurementMethod>('1-point');
     const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
+    // Execution Time States
+    const [startTime, setStartTime] = useState<string>('');
+    const [endTime, setEndTime] = useState<string>('');
+    const [totalMinutes, setTotalMinutes] = useState<number>(0);
+
+    // Examiner State
+    const [selectedExaminer, setSelectedExaminer] = useState<Examiner>(mockExaminers[0]);
+    const [isExaminerModalOpen, setIsExaminerModalOpen] = useState(false);
+
+    // Time Helpers
+    const formatTime = (date: Date) => {
+        const h = String(date.getHours()).padStart(2, '0');
+        const m = String(date.getMinutes()).padStart(2, '0');
+        return `${h}:${m}`;
+    };
+
+    const addMinutesToTime = (timeStr: string, mins: number) => {
+        if (!timeStr) return '';
+        const [h, m] = timeStr.split(':').map(Number);
+        const date = new Date();
+        date.setHours(h, m + mins, 0, 0);
+        return formatTime(date);
+    };
+
+    // Compute total minutes
+    useEffect(() => {
+        if (startTime && endTime) {
+            const [sh, sm] = startTime.split(':').map(Number);
+            const [eh, em] = endTime.split(':').map(Number);
+            let diff = (eh * 60 + em) - (sh * 60 + sm);
+            if (diff < 0) diff += 24 * 60; // handle overnight crossing
+            setTotalMinutes(diff);
+        } else {
+            setTotalMinutes(0);
+        }
+    }, [startTime, endTime]);
+
+    const handleStartTimeChange = (newStart: string) => {
+        setStartTime(newStart);
+        // Requirement 3.2: When start time changes, end time should follow (Start + 15m)
+        setEndTime(addMinutesToTime(newStart, 15));
+        setIsDirty(true);
+    };
+
+    const handleEndTimeChange = (newEnd: string) => {
+        setEndTime(newEnd);
+        setIsDirty(true);
+    };
+
+    const handleNowClick = () => {
+        const now = new Date();
+        const newStart = formatTime(now);
+        setStartTime(newStart);
+        setEndTime(addMinutesToTime(newStart, 15));
+        setIsDirty(true);
+    };
+
+    const handleAdd5Min = () => {
+        setEndTime(addMinutesToTime(endTime, 5));
+        setIsDirty(true);
+    };
+
     // Preview Mode State
     const [isPreviewMode, setIsPreviewMode] = useState(false);
     const [isPisaPreview, setIsPisaPreview] = useState(false); // PISA Preview toggle
@@ -217,6 +288,15 @@ const App: React.FC = () => {
             const record = await DentalDB.getChart(date);
             if (record) {
                 setAllTeethData(record.data);
+                if (record.startTime && record.endTime) {
+                    setStartTime(record.startTime);
+                    setEndTime(record.endTime);
+                } else {
+                    // Fallback if older record lacks time
+                    const now = new Date();
+                    setStartTime(formatTime(now));
+                    setEndTime(formatTime(new Date(now.getTime() + 15 * 60000)));
+                }
                 setToast({ message: `${date.replace(/-/g, '/')} のデータを読み込みました`, type: 'info' });
             } else {
                 // If no data exists for this date, reset to empty
@@ -225,6 +305,10 @@ const App: React.FC = () => {
                     '4-point': generateFullMouth(),
                     '6-point': generateFullMouth(),
                 });
+                // Initialize default execution time
+                const now = new Date();
+                setStartTime(formatTime(now));
+                setEndTime(formatTime(new Date(now.getTime() + 15 * 60000)));
             }
             setIsDirty(false); // Reset dirty state on load
         } catch (error) {
@@ -259,7 +343,9 @@ const App: React.FC = () => {
             await DentalDB.saveChart({
                 date: selectedDate,
                 data: allTeethData,
-                updatedAt: Date.now()
+                updatedAt: Date.now(),
+                startTime,
+                endTime
             });
             setToast({ message: "保存しました", type: 'success' });
             await updateMarkedDates(); // Update calendar markers
@@ -724,14 +810,97 @@ const App: React.FC = () => {
 
             {/* Header - Compact (Hidden on print) */}
             <header className="bg-white shadow-sm border-b border-slate-200 px-4 py-2 sticky top-0 z-50 shrink-0 print:hidden">
-                {/* Patient Info Row */}
-                <div className="max-w-full mx-auto mb-2 px-1">
+                {/* Patient Info Row & Execution Time */}
+                <div className="max-w-full mx-auto mb-2 px-1 flex justify-between items-center">
                     <div className="flex items-center gap-3 text-sm">
-                        <span className="font-mono font-bold text-slate-700">000000001</span>
-                        <span className="text-slate-500">ヨシダ タロウ</span>
-                        <span className="font-bold text-slate-800">吉田 太郎</span>
-                        <span className="text-slate-500">（1975/01/01）</span>
+                        {/* Examiner Icon Button (Requirement: Header Examiner UI) */}
+                        <WithTooltip label={`実施者: ${selectedExaminer.name}`}>
+                            <button 
+                                onClick={() => setIsExaminerModalOpen(true)}
+                                className={`
+                                    w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-xs shadow-md active:scale-95 transition-all border-2 border-white
+                                    ${selectedExaminer.color}
+                                `}
+                            >
+                                {(() => {
+                                    const parts = selectedExaminer.name.split(/\s+/);
+                                    return parts.length >= 2 ? parts[0][0] + parts[1][0] : selectedExaminer.name.substring(0, 2);
+                                })()}
+                            </button>
+                        </WithTooltip>
+
+                        <div className="flex flex-col -gap-1">
+                            <span className="font-mono font-bold text-slate-400 text-[10px]">000000001</span>
+                            <div className="flex items-center gap-1.5">
+                                <span className="font-black text-slate-800">吉田 太郎</span>
+                                <span className="text-slate-400 font-bold text-xs">様</span>
+                            </div>
+                        </div>
+                        <span className="text-slate-400 text-[10px] font-bold ml-1">（1975/01/01）</span>
                     </div>
+
+                    {/* Execution Time Controls (Requirement 2, 3, 4) */}
+                    {!isPreviewMode && !isCompareMode && (
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200 shadow-sm">
+                                {/* Requirement 2: Set Now Button */}
+                                <button 
+                                    onClick={handleNowClick} 
+                                    className="px-3 py-1 bg-white border border-slate-200 rounded-lg shadow-sm text-slate-700 text-[11px] font-bold hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 active:scale-95 transition-all"
+                                >
+                                    今
+                                </button>
+                                
+                                <div className="flex items-center gap-1 px-1">
+                                    <input 
+                                        type="time" 
+                                        value={startTime} 
+                                        onChange={(e) => handleStartTimeChange(e.target.value)} 
+                                        className="bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 w-[80px] text-center" 
+                                    />
+                                    <span className="text-slate-400 font-medium">〜</span>
+                                    <input 
+                                        type="time" 
+                                        value={endTime} 
+                                        onChange={(e) => handleEndTimeChange(e.target.value)} 
+                                        className="bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 w-[80px] text-center" 
+                                    />
+                                </div>
+
+                                {/* Requirement 2: Quick Add Button */}
+                                <button 
+                                    onClick={handleAdd5Min} 
+                                    className="px-2 py-1 bg-white border border-slate-200 rounded-lg shadow-sm text-slate-700 text-[11px] font-bold hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-600 active:scale-95 transition-all"
+                                >
+                                    +5分
+                                </button>
+                            </div>
+                            
+                            {/* Requirement 4: Validation Display */}
+                            <div className={`
+                                flex items-center gap-1.5 px-3 py-1.5 rounded-xl border shadow-sm transition-all duration-300
+                                ${totalMinutes >= 15 
+                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
+                                    : 'bg-orange-50 border-orange-200 text-orange-700 animate-pulse-slow'}
+                            `}>
+                                {totalMinutes >= 15 ? (
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                    </svg>
+                                ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                )}
+                                <span className="text-[13px] font-black whitespace-nowrap">
+                                    {totalMinutes}分
+                                </span>
+                                {totalMinutes < 15 && (
+                                    <span className="text-[10px] font-bold opacity-80">15分未満です</span>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
                 {/* Controls Row */}
                 <div className="max-w-full mx-auto grid grid-cols-3 items-center gap-4">
@@ -1135,6 +1304,18 @@ const App: React.FC = () => {
             <SettingsModal
                 isOpen={isSettingsOpen}
                 onClose={() => setIsSettingsOpen(false)}
+            />
+
+            <ExaminerModal
+                isOpen={isExaminerModalOpen}
+                onClose={() => setIsExaminerModalOpen(false)}
+                examiners={mockExaminers}
+                onSelect={(examiner) => {
+                    setSelectedExaminer(examiner);
+                    setIsExaminerModalOpen(false);
+                    setIsDirty(true);
+                }}
+                selectedId={selectedExaminer.id}
             />
 
         </div>
