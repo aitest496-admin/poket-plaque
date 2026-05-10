@@ -145,19 +145,59 @@ const MethodSelector: React.FC<{ current: MeasurementMethod; onChange: (m: Measu
     );
 };
 
-// SideLabels Component to show Buccal/Lingual text
-const SideLabels = ({ jaw }: { jaw: 'upper' | 'lower' }) => {
+// SideLabels Component to show Buccal/Lingual text and row titles
+const SideLabels = ({ jaw, method }: { jaw: 'upper' | 'lower', method: MethodType }) => {
+    const isLarge = method !== '1-point';
     const topText = jaw === 'upper' ? '頬側' : '舌側';
     const bottomText = jaw === 'upper' ? '口蓋側' : '頬側';
 
+    const RowTitle = ({ text, height }: { text: string, height: string }) => (
+        <div className={`w-full ${height} flex items-center justify-center text-[10px] text-slate-500 font-normal border-b border-transparent`}>
+            {text}
+        </div>
+    );
+
     return (
-        <div className="flex flex-col self-stretch items-center min-w-[30px] select-none text-slate-400 font-bold text-sm py-1">
-            <div className="flex-1 flex flex-col justify-end items-center pb-[120px]">
-                <span className="[writing-mode:vertical-rl] tracking-widest">{topText}</span>
+        <div className="flex flex-col self-stretch items-center min-w-[40px] select-none text-slate-400 font-bold py-1">
+            {/* TOP SECTION */}
+            <div className="flex-1 flex flex-col justify-end items-center w-full">
+                {/* Side Label (Prominent) */}
+                <div className="flex-1 flex items-center justify-center mb-2">
+                    <span className="[writing-mode:vertical-rl] tracking-widest text-lg bg-slate-100 px-1 py-4 rounded-md text-slate-600 shadow-sm border border-slate-200">{topText}</span>
+                </div>
+                
+                {/* Row Titles (Conditional) */}
+                {isLarge && (
+                    <div className="w-full">
+                        <RowTitle text="動揺" height="h-[28px]" />
+                        <RowTitle text="排膿" height="h-[26px]" />
+                        <RowTitle text="出血" height="h-[26px]" />
+                        <div className="h-[42px]"></div> {/* Pocket Depth Input Spacer */}
+                    </div>
+                )}
             </div>
-            <div className="h-[24px] w-full shrink-0"></div>
-            <div className="flex-1 flex flex-col justify-start items-center pt-[120px]">
-                <span className="[writing-mode:vertical-rl] tracking-widest">{bottomText}</span>
+
+            {/* TOOTH ID SPACER */}
+            <div className="h-[52px] w-full shrink-0 flex items-center justify-center text-[10px] text-slate-300">
+                <div className="w-full border-y border-slate-200 py-2 text-center bg-slate-50">部位</div>
+            </div>
+
+            {/* BOTTOM SECTION */}
+            <div className="flex-1 flex flex-col justify-start items-center w-full">
+                {/* Row Titles (Conditional) */}
+                {isLarge && (
+                    <div className="w-full">
+                        <div className="h-[42px]"></div> {/* Pocket Depth Input Spacer */}
+                        <RowTitle text="出血" height="h-[26px]" />
+                        <RowTitle text="排膿" height="h-[26px]" />
+                        {jaw === 'lower' && <RowTitle text="動揺" height="h-[28px]" />}
+                    </div>
+                )}
+
+                {/* Side Label (Prominent) */}
+                <div className="flex-1 flex items-center justify-center mt-2">
+                    <span className="[writing-mode:vertical-rl] tracking-widest text-lg bg-slate-100 px-1 py-4 rounded-md text-slate-600 shadow-sm border border-slate-200">{bottomText}</span>
+                </div>
             </div>
         </div>
     );
@@ -741,7 +781,7 @@ const App: React.FC = () => {
                                         {currentTeethData.UR.map(tooth => (
                                             <Tooth key={tooth.id} data={tooth} onUpdate={(t) => handleToothUpdate('UR', t)} jaw="upper" method={measurementMethod} />
                                         ))}
-                                        <SideLabels jaw="upper" />
+                                        <SideLabels jaw="upper" method={measurementMethod} />
                                     </div>
                                 </div>
                             </div>
@@ -749,7 +789,7 @@ const App: React.FC = () => {
                             <div className="w-1/2 h-1/2 flex items-center justify-end bg-slate-100 p-0.5">
                                 <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-hidden">
                                     <div className="flex w-full h-full gap-[1px] items-start">
-                                        <SideLabels jaw="upper" />
+                                        <SideLabels jaw="upper" method={measurementMethod} />
                                         {currentTeethData.UL.map(tooth => (
                                             <Tooth key={tooth.id} data={tooth} onUpdate={(t) => handleToothUpdate('UL', t)} jaw="upper" method={measurementMethod} />
                                         ))}
@@ -763,7 +803,7 @@ const App: React.FC = () => {
                                         {currentTeethData.LR.map(tooth => (
                                             <Tooth key={tooth.id} data={tooth} onUpdate={(t) => handleToothUpdate('LR', t)} jaw="lower" method={measurementMethod} />
                                         ))}
-                                        <SideLabels jaw="lower" />
+                                        <SideLabels jaw="lower" method={measurementMethod} />
                                     </div>
                                 </div>
                             </div>
@@ -771,7 +811,7 @@ const App: React.FC = () => {
                             <div className="w-1/2 h-1/2 flex items-center justify-end bg-slate-100 p-0.5">
                                 <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-hidden">
                                     <div className="flex w-full h-full gap-[1px] items-start">
-                                        <SideLabels jaw="lower" />
+                                        <SideLabels jaw="lower" method={measurementMethod} />
                                         {currentTeethData.LL.map(tooth => (
                                             <Tooth key={tooth.id} data={tooth} onUpdate={(t) => handleToothUpdate('LL', t)} jaw="lower" method={measurementMethod} />
                                         ))}
