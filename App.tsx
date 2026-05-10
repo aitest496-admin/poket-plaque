@@ -146,100 +146,83 @@ const MethodSelector: React.FC<{ current: MeasurementMethod; onChange: (m: Measu
 };
 
 // SideLabels Component to show Buccal/Lingual text and row titles
+// Uses a single narrow column with pixel-exact heights matching each Tooth row
 const SideLabels = ({ jaw, method }: { jaw: 'upper' | 'lower', method: MeasurementMethod }) => {
-    const isLarge = method !== '1-point';
-    if (!isLarge) return null;
+    if (method === '1-point') return null;
 
-    const topText = jaw === 'upper' ? '頬側' : '舌側';
-    const bottomText = jaw === 'upper' ? '口蓋側' : '頬側';
+    const topSideText = jaw === 'upper' ? '頬側' : '舌側';
+    const bottomSideText = jaw === 'upper' ? '口蓋側' : '頬側';
 
-    // Exact heights matching Tooth.tsx and PocketDepthChart.tsx (isLarge=true)
-    const hPlaque = 100;
-    const hMobility = 28;
-    const hPus = 26;
-    const hBleeding = 26;
-    const hPDGrid = 202.5; // 9 levels * (22 + 0.5)
-    const hPDInput = 42.5; // 42 + 0.5
-    const hID = 52;
+    // Exact heights matching Tooth.tsx rows (all border-box)
+    const hPlaque = 100;    // PlaqueDiagram h-[100px]
+    const hMobility = 28;   // Mobility row h-[28px]
+    const hPus = 26;        // ThreePointToggle h-[26px]
+    const hBleeding = 26;   // ThreePointToggle h-[26px]
+    const hPD = 245;        // PocketDepthChart total: input(42+0.5) + 9cells(9×22.5)
+    const hID = 52;         // Tooth ID h-[52px]
 
-    const RowTitle = ({ text, height, className = "" }: { text: string, height: number, className?: string }) => (
-        <div 
-            style={{ height: `${height}px` }}
-            className={`w-full flex items-center justify-center text-[10px] text-slate-500 font-bold border-b border-slate-100 last:border-b-0 ${className}`}
-        >
+    // Simple label row with exact height
+    const Label = ({ text, h }: { text: string, h: number }) => (
+        <div style={{ height: `${h}px` }}
+            className="flex items-center justify-center text-[10px] text-slate-500 font-bold whitespace-nowrap">
             {text}
         </div>
     );
 
-    const Spacer = ({ height }: { height: number }) => (
-        <div style={{ height: `${height}px` }} className="w-full border-b border-slate-100 last:border-b-0"></div>
+    // Empty spacer with exact height
+    const Spacer = ({ h }: { h: number }) => (
+        <div style={{ height: `${h}px` }} />
+    );
+
+    // Vertical text label spanning PD area
+    const SideText = ({ text }: { text: string }) => (
+        <div style={{ height: `${hPD}px` }}
+            className="flex items-center justify-center">
+            <span className="[writing-mode:vertical-rl] tracking-[0.25em] text-base font-black text-slate-600">
+                {text}
+            </span>
+        </div>
     );
 
     return (
-        <div className="flex flex-col shrink-0 select-none bg-slate-50 border-x border-slate-200">
-            {/* TOP BLOCK */}
-            <div className="flex">
-                {/* Vertical Side Label */}
-                <div className="w-8 flex items-center justify-center bg-slate-100 border-r border-slate-200">
-                    <span className="[writing-mode:vertical-rl] tracking-widest text-sm font-black text-slate-600 drop-shadow-sm">{topText}</span>
-                </div>
-                {/* Row Titles */}
-                <div className="w-10 flex flex-col">
-                    {jaw === 'upper' ? (
-                        <>
-                            <Spacer height={hPlaque} />
-                            <RowTitle text="動揺" height={hMobility} />
-                            <RowTitle text="排膿" height={hPus} />
-                            <RowTitle text="出血" height={hBleeding} />
-                            <RowTitle text="PD" height={hPDGrid} className="items-start pt-2" />
-                            <Spacer height={hPDInput} />
-                        </>
-                    ) : (
-                        <>
-                            <RowTitle text="排膿" height={hPus} />
-                            <RowTitle text="出血" height={hBleeding} />
-                            <RowTitle text="PD" height={hPDGrid} className="items-start pt-2" />
-                            <Spacer height={hPDInput} />
-                        </>
-                    )}
-                </div>
-            </div>
+        // border-transparent matches Tooth's outer border for pixel alignment
+        <div className="flex flex-col shrink-0 w-[30px] select-none border border-transparent">
+            {/* === TOP BLOCK === */}
+            {jaw === 'upper' ? (
+                <>
+                    <Spacer h={hPlaque} />
+                    <Label text="動揺" h={hMobility} />
+                    <Label text="排膿" h={hPus} />
+                    <Label text="出血" h={hBleeding} />
+                    <SideText text={topSideText} />
+                </>
+            ) : (
+                <>
+                    <Label text="排膿" h={hPus} />
+                    <Label text="出血" h={hBleeding} />
+                    <SideText text={topSideText} />
+                </>
+            )}
 
-            {/* TOOTH ID SECTION */}
-            <div 
-                style={{ height: `${hID}px` }}
-                className="flex items-center justify-center text-[11px] font-black text-slate-500 bg-slate-200 border-y border-slate-300 shadow-inner"
-            >
-                部位
-            </div>
+            {/* === TOOTH ID SPACER (no label) === */}
+            <Spacer h={hID} />
 
-            {/* BOTTOM BLOCK */}
-            <div className="flex">
-                {/* Vertical Side Label */}
-                <div className="w-8 flex items-center justify-center bg-slate-100 border-r border-slate-200">
-                    <span className="[writing-mode:vertical-rl] tracking-widest text-sm font-black text-slate-600 drop-shadow-sm">{bottomText}</span>
-                </div>
-                {/* Row Titles */}
-                <div className="w-10 flex flex-col">
-                    {jaw === 'upper' ? (
-                        <>
-                            <Spacer height={hPDInput} />
-                            <RowTitle text="出血" height={hBleeding} />
-                            <RowTitle text="排膿" height={hPus} />
-                            <RowTitle text="PD" height={hPDGrid} className="items-start pt-2" />
-                        </>
-                    ) : (
-                        <>
-                            <Spacer height={hPDInput} />
-                            <RowTitle text="出血" height={hBleeding} />
-                            <RowTitle text="排膿" height={hPus} />
-                            <RowTitle text="PD" height={hPDGrid} className="items-start pt-2" />
-                            <RowTitle text="動揺" height={hMobility} />
-                            <Spacer height={hPlaque} />
-                        </>
-                    )}
-                </div>
-            </div>
+            {/* === BOTTOM BLOCK === */}
+            {jaw === 'upper' ? (
+                <>
+                    <SideText text={bottomSideText} />
+                    <Label text="出血" h={hBleeding} />
+                    <Label text="排膿" h={hPus} />
+                </>
+            ) : (
+                <>
+                    <SideText text={bottomSideText} />
+                    <Label text="出血" h={hBleeding} />
+                    <Label text="排膿" h={hPus} />
+                    <Label text="動揺" h={hMobility} />
+                    <Spacer h={hPlaque} />
+                </>
+            )}
         </div>
     );
 };
