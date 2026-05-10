@@ -154,7 +154,6 @@ const SideLabels = ({ jaw, method }: { jaw: 'upper' | 'lower', method: Measureme
     const bottomSideText = jaw === 'upper' ? '口蓋側' : '頬側';
 
     // Exact heights matching Tooth.tsx rows (all border-box)
-    const hPlaque = 100;    // PlaqueDiagram h-[100px]
     const hMobility = 28;   // Mobility row h-[28px]
     const hPus = 26;        // ThreePointToggle h-[26px]
     const hBleeding = 26;   // ThreePointToggle h-[26px]
@@ -190,7 +189,6 @@ const SideLabels = ({ jaw, method }: { jaw: 'upper' | 'lower', method: Measureme
             {/* === TOP BLOCK === */}
             {jaw === 'upper' ? (
                 <>
-                    <Spacer h={hPlaque} />
                     <Label text="動揺" h={hMobility} />
                     <Label text="排膿" h={hPus} />
                     <Label text="出血" h={hBleeding} />
@@ -220,7 +218,6 @@ const SideLabels = ({ jaw, method }: { jaw: 'upper' | 'lower', method: Measureme
                     <Label text="出血" h={hBleeding} />
                     <Label text="排膿" h={hPus} />
                     <Label text="動揺" h={hMobility} />
-                    <Spacer h={hPlaque} />
                 </>
             )}
         </div>
