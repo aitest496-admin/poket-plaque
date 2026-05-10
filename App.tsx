@@ -735,7 +735,7 @@ const App: React.FC = () => {
                             className="flex flex-wrap w-[200%] h-[200%] transition-transform duration-500 ease-in-out will-change-transform"
                             style={{ transform: getTranslate() }}
                         >
-                            <div className="w-1/2 h-1/2 flex items-center justify-start bg-slate-100 p-1 md:p-2 pr-2 md:pr-4">
+                            <div className="w-1/2 h-1/2 flex items-center justify-start bg-slate-100 p-0.5">
                                 <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-auto">
                                     <div className="flex justify-between w-full h-full gap-[1px] items-start">
                                         {currentTeethData.UR.map(tooth => (
@@ -746,7 +746,7 @@ const App: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="w-1/2 h-1/2 flex items-center justify-end bg-slate-100 p-1 md:p-2 pl-2 md:pl-4">
+                            <div className="w-1/2 h-1/2 flex items-center justify-end bg-slate-100 p-0.5">
                                 <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-auto">
                                     <div className="flex justify-between w-full h-full gap-[1px] items-start">
                                         <SideLabels jaw="upper" />
@@ -757,7 +757,7 @@ const App: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="w-1/2 h-1/2 flex items-center justify-start bg-slate-100 p-1 md:p-2 pr-2 md:pr-4">
+                            <div className="w-1/2 h-1/2 flex items-center justify-start bg-slate-100 p-0.5">
                                 <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-auto">
                                     <div className="flex justify-between w-full h-full gap-[1px] items-start">
                                         {currentTeethData.LR.map(tooth => (
@@ -768,7 +768,7 @@ const App: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="w-1/2 h-1/2 flex items-center justify-end bg-slate-100 p-1 md:p-2 pl-2 md:pl-4">
+                            <div className="w-1/2 h-1/2 flex items-center justify-end bg-slate-100 p-0.5">
                                 <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-auto">
                                     <div className="flex justify-between w-full h-full gap-[1px] items-start">
                                         <SideLabels jaw="lower" />
@@ -809,9 +809,9 @@ const App: React.FC = () => {
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
             {/* Header - Compact (Hidden on print) */}
-            <header className="bg-white shadow-sm border-b border-slate-200 px-4 py-2 sticky top-0 z-50 shrink-0 print:hidden">
+            <header className="bg-white shadow-sm border-b border-slate-200 px-4 py-1 sticky top-0 z-50 shrink-0 print:hidden">
                 {/* Patient Info Row & Execution Time */}
-                <div className="max-w-full mx-auto mb-2 px-1 flex justify-between items-center">
+                <div className="max-w-full mx-auto mb-1 px-1 flex justify-between items-center">
                     <div className="flex items-center gap-3 text-sm">
                         {/* Examiner Icon Button (Requirement: Header Examiner UI) */}
                         <WithTooltip label={`実施者: ${selectedExaminer.name}`}>

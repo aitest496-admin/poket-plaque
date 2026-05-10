@@ -24,7 +24,7 @@ const ThreePointToggle: React.FC<ThreePointToggleProps> = ({ values, onChange, t
     ? displayPoints 
     : (singlePoint ? [1] : [0, 1, 2]);
 
-  const heightClass = singlePoint ? 'h-[24px]' : 'h-[36px]';
+  const heightClass = singlePoint ? 'h-[24px]' : 'h-[30px]';
 
   return (
     <div className={`flex ${heightClass} border-b border-[#ccc] bg-white w-full text-[9px] touch-none`}>

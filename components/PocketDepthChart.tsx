@@ -34,10 +34,10 @@ const PocketDepthChart: React.FC<PocketDepthChartProps> = ({ values, onChange, i
 
   // Dynamic sizes based on method
   const isLarge = !singlePoint;
-  const inputHeight = isLarge ? 'h-[50px]' : 'h-[39px]';
-  const cellHeight = isLarge ? 'h-[30px]' : 'h-[19px]';
+  const inputHeight = isLarge ? 'h-[46px]' : 'h-[39px]';
+  const cellHeight = isLarge ? 'h-[25px]' : 'h-[19px]';
   const inputTextSize = isLarge ? 'text-[20px]' : 'text-[14px]';
-  const cellTextSize = isLarge ? 'text-[18px]' : 'text-[10px]';
+  const cellTextSize = isLarge ? 'text-[16px]' : 'text-[10px]';
 
   return (
     <div className="flex justify-between px-[2px] w-full bg-white touch-none relative">
