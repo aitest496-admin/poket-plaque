@@ -736,8 +736,8 @@ const App: React.FC = () => {
                             style={{ transform: getTranslate() }}
                         >
                             <div className="w-1/2 h-1/2 flex items-center justify-start bg-slate-100 p-0.5">
-                                <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-auto">
-                                    <div className="flex justify-between w-full h-full gap-[1px] items-start">
+                                <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-hidden">
+                                    <div className="flex w-full h-full gap-[1px] items-start">
                                         {currentTeethData.UR.map(tooth => (
                                             <Tooth key={tooth.id} data={tooth} onUpdate={(t) => handleToothUpdate('UR', t)} jaw="upper" method={measurementMethod} />
                                         ))}
@@ -747,8 +747,8 @@ const App: React.FC = () => {
                             </div>
 
                             <div className="w-1/2 h-1/2 flex items-center justify-end bg-slate-100 p-0.5">
-                                <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-auto">
-                                    <div className="flex justify-between w-full h-full gap-[1px] items-start">
+                                <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-hidden">
+                                    <div className="flex w-full h-full gap-[1px] items-start">
                                         <SideLabels jaw="upper" />
                                         {currentTeethData.UL.map(tooth => (
                                             <Tooth key={tooth.id} data={tooth} onUpdate={(t) => handleToothUpdate('UL', t)} jaw="upper" method={measurementMethod} />
@@ -758,8 +758,8 @@ const App: React.FC = () => {
                             </div>
 
                             <div className="w-1/2 h-1/2 flex items-center justify-start bg-slate-100 p-0.5">
-                                <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-auto">
-                                    <div className="flex justify-between w-full h-full gap-[1px] items-start">
+                                <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-hidden">
+                                    <div className="flex w-full h-full gap-[1px] items-start">
                                         {currentTeethData.LR.map(tooth => (
                                             <Tooth key={tooth.id} data={tooth} onUpdate={(t) => handleToothUpdate('LR', t)} jaw="lower" method={measurementMethod} />
                                         ))}
@@ -769,8 +769,8 @@ const App: React.FC = () => {
                             </div>
 
                             <div className="w-1/2 h-1/2 flex items-center justify-end bg-slate-100 p-0.5">
-                                <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-auto">
-                                    <div className="flex justify-between w-full h-full gap-[1px] items-start">
+                                <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-hidden">
+                                    <div className="flex w-full h-full gap-[1px] items-start">
                                         <SideLabels jaw="lower" />
                                         {currentTeethData.LL.map(tooth => (
                                             <Tooth key={tooth.id} data={tooth} onUpdate={(t) => handleToothUpdate('LL', t)} jaw="lower" method={measurementMethod} />
