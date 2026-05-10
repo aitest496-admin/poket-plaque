@@ -104,10 +104,10 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
   const buccalSinglePoint = is1Point;
   const isLarge = !is1Point;
   const toothWidthClass = is1Point ? 'min-w-[28px] max-w-[45px]' : 'min-w-[78px] max-w-[150px]';
-  const mobilityRowHeight = isLarge ? 'h-[32px]' : 'h-[24px]';
-  const mobilityTextSize = isLarge ? 'text-[16px]' : 'text-[12px]';
-  const toothIdTextSize = isLarge ? 'text-[18px]' : 'text-[12px]';
-  const toothIdPadding = isLarge ? 'py-[4px]' : 'py-[2px]';
+  const mobilityRowHeight = isLarge ? 'h-[28px]' : 'h-[24px]';
+  const mobilityTextSize = isLarge ? 'text-[14px]' : 'text-[12px]';
+  const toothIdTextSize = isLarge ? 'text-[16px]' : 'text-[12px]';
+  const toothIdPadding = isLarge ? 'py-[2px]' : 'py-[2px]';
 
   const mobilityBtnClass = `${is1Point ? 'w-[12px] text-[10px]' : 'w-[24px] text-[20px]'} h-full leading-none font-bold flex items-center justify-center text-gray-500 hover:text-black hover:bg-gray-200 rounded`;
 

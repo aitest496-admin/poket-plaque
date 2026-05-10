@@ -152,11 +152,11 @@ const SideLabels = ({ jaw }: { jaw: 'upper' | 'lower' }) => {
 
     return (
         <div className="flex flex-col self-stretch items-center min-w-[30px] select-none text-slate-400 font-bold text-sm py-1">
-            <div className="flex-1 flex flex-col justify-end items-center pb-[145px]">
+            <div className="flex-1 flex flex-col justify-end items-center pb-[120px]">
                 <span className="[writing-mode:vertical-rl] tracking-widest">{topText}</span>
             </div>
             <div className="h-[24px] w-full shrink-0"></div>
-            <div className="flex-1 flex flex-col justify-start items-center pt-[145px]">
+            <div className="flex-1 flex flex-col justify-start items-center pt-[120px]">
                 <span className="[writing-mode:vertical-rl] tracking-widest">{bottomText}</span>
             </div>
         </div>
