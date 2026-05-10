@@ -108,6 +108,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
   const mobilityTextSize = isLarge ? 'text-[14px]' : 'text-[12px]';
   const toothIdTextSize = isLarge ? 'text-[16px]' : 'text-[12px]';
   const toothIdPadding = isLarge ? 'py-[2px]' : 'py-[2px]';
+  const toothIdHeight = isLarge ? 'h-[52px]' : 'h-[30px]';
 
   const mobilityBtnClass = `${is1Point ? 'w-[12px] text-[10px]' : 'w-[24px] text-[20px]'} h-full leading-none font-bold flex items-center justify-center text-gray-500 hover:text-black hover:bg-gray-200 rounded`;
 
@@ -189,7 +190,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
 
         {/* === TOOTH ID (上顎) === */}
         <div
-          className={`font-bold ${toothIdPadding} ${toothIdTextSize} text-center border-b border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
+          className={`font-bold ${toothIdHeight} ${toothIdTextSize} flex items-center justify-center border-b border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
           onClick={handleStatusChange}
           title="上顎: クリックで状態切替 (永久歯/欠損/乳歯)"
         >
@@ -197,7 +198,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
         </div>
         {/* === TOOTH ID (下顎) === */}
         <div
-          className={`font-bold ${toothIdPadding} ${toothIdTextSize} text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(lowerData)}`}
+          className={`font-bold ${toothIdHeight} ${toothIdTextSize} flex items-center justify-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(lowerData)}`}
           onClick={() => {
             let nextState = { isMissing: false, isPrimary: false };
             if (lowerData.id >= 6) {
@@ -273,7 +274,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
           <div className="flex flex-col w-full relative">
             {data.isMissing && <MissingOverlay />}
             {/* 1. Plaque (Most Outer / Top) */}
-            <div className="border-b border-[#ccc] w-full">
+            <div className={`border-b border-[#ccc] w-full ${isLarge ? 'h-[100px]' : ''}`}>
               <PlaqueDiagram value={data.plaque} onChange={handlePlaqueChange} onToggleAll={handlePlaqueToggleAll} variant="simple" />
             </div>
 
@@ -301,7 +302,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
 
           {/* TOOTH ID */}
           <div
-            className={`font-bold ${toothIdPadding} ${toothIdTextSize} text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
+            className={`font-bold ${toothIdHeight} ${toothIdTextSize} flex items-center justify-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
             onClick={handleStatusChange}
             title="クリックで状態切替 (永久歯/欠損/乳歯)"
           >
@@ -352,7 +353,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
 
           {/* TOOTH ID */}
           <div
-            className={`font-bold ${toothIdPadding} ${toothIdTextSize} text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
+            className={`font-bold ${toothIdHeight} ${toothIdTextSize} flex items-center justify-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
             onClick={handleStatusChange}
             title="クリックで状態切替 (永久歯/欠損/乳歯)"
           >
@@ -384,7 +385,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
             </div>
 
             {/* 5. Plaque */}
-            <div className="border-t border-[#ccc] w-full">
+            <div className={`border-t border-[#ccc] w-full ${isLarge ? 'h-[100px]' : ''}`}>
               <PlaqueDiagram value={data.plaque} onChange={handlePlaqueChange} onToggleAll={handlePlaqueToggleAll} variant="simple" />
             </div>
           </div>
@@ -408,7 +409,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
       {jaw === 'upper' && (
         <>
           {/* Plaque Diagram (Outer Most) */}
-          <div className="border-b border-[#ccc] w-full">
+          <div className={`border-b border-[#ccc] w-full ${isLarge ? 'h-[100px]' : ''}`}>
             <PlaqueDiagram
               value={data.plaque}
               onChange={handlePlaqueChange}
@@ -468,7 +469,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
               onClick={() => handleMobilityChange(1)}
             >+</button>
           </div>
-          <div className="border-t border-[#ccc] w-full">
+          <div className={`border-t border-[#ccc] w-full ${isLarge ? 'h-[100px]' : ''}`}>
             <PlaqueDiagram
               value={data.plaque}
               onChange={handlePlaqueChange}
@@ -520,7 +521,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
 
       {/* ================= TOOTH ID ================= */}
       <div
-        className={`font-bold ${toothIdPadding} ${toothIdTextSize} text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
+        className={`font-bold ${toothIdHeight} ${toothIdTextSize} flex items-center justify-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
         onClick={handleStatusChange}
         title="クリックで状態切替 (永久歯/欠損/乳歯)"
       >

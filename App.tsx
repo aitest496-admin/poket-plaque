@@ -146,57 +146,98 @@ const MethodSelector: React.FC<{ current: MeasurementMethod; onChange: (m: Measu
 };
 
 // SideLabels Component to show Buccal/Lingual text and row titles
-const SideLabels = ({ jaw, method }: { jaw: 'upper' | 'lower', method: MethodType }) => {
+const SideLabels = ({ jaw, method }: { jaw: 'upper' | 'lower', method: MeasurementMethod }) => {
     const isLarge = method !== '1-point';
+    if (!isLarge) return null;
+
     const topText = jaw === 'upper' ? '頬側' : '舌側';
     const bottomText = jaw === 'upper' ? '口蓋側' : '頬側';
 
-    const RowTitle = ({ text, height }: { text: string, height: string }) => (
-        <div className={`w-full ${height} flex items-center justify-center text-[10px] text-slate-500 font-normal border-b border-transparent`}>
+    // Exact heights matching Tooth.tsx and PocketDepthChart.tsx (isLarge=true)
+    const hPlaque = 100;
+    const hMobility = 28;
+    const hPus = 26;
+    const hBleeding = 26;
+    const hPDGrid = 202.5; // 9 levels * (22 + 0.5)
+    const hPDInput = 42.5; // 42 + 0.5
+    const hID = 52;
+
+    const RowTitle = ({ text, height, className = "" }: { text: string, height: number, className?: string }) => (
+        <div 
+            style={{ height: `${height}px` }}
+            className={`w-full flex items-center justify-center text-[10px] text-slate-500 font-bold border-b border-slate-100 last:border-b-0 ${className}`}
+        >
             {text}
         </div>
     );
 
+    const Spacer = ({ height }: { height: number }) => (
+        <div style={{ height: `${height}px` }} className="w-full border-b border-slate-100 last:border-b-0"></div>
+    );
+
     return (
-        <div className="flex flex-col self-stretch items-center min-w-[40px] select-none text-slate-400 font-bold py-1">
-            {/* TOP SECTION */}
-            <div className="flex-1 flex flex-col justify-end items-center w-full">
-                {/* Side Label (Prominent) */}
-                <div className="flex-1 flex items-center justify-center mb-2">
-                    <span className="[writing-mode:vertical-rl] tracking-widest text-lg bg-slate-100 px-1 py-4 rounded-md text-slate-600 shadow-sm border border-slate-200">{topText}</span>
+        <div className="flex flex-col shrink-0 select-none bg-slate-50 border-x border-slate-200">
+            {/* TOP BLOCK */}
+            <div className="flex">
+                {/* Vertical Side Label */}
+                <div className="w-8 flex items-center justify-center bg-slate-100 border-r border-slate-200">
+                    <span className="[writing-mode:vertical-rl] tracking-widest text-sm font-black text-slate-600 drop-shadow-sm">{topText}</span>
                 </div>
-                
-                {/* Row Titles (Conditional) */}
-                {isLarge && (
-                    <div className="w-full">
-                        <RowTitle text="動揺" height="h-[28px]" />
-                        <RowTitle text="排膿" height="h-[26px]" />
-                        <RowTitle text="出血" height="h-[26px]" />
-                        <div className="h-[42px]"></div> {/* Pocket Depth Input Spacer */}
-                    </div>
-                )}
+                {/* Row Titles */}
+                <div className="w-10 flex flex-col">
+                    {jaw === 'upper' ? (
+                        <>
+                            <Spacer height={hPlaque} />
+                            <RowTitle text="動揺" height={hMobility} />
+                            <RowTitle text="排膿" height={hPus} />
+                            <RowTitle text="出血" height={hBleeding} />
+                            <RowTitle text="PD" height={hPDGrid} className="items-start pt-2" />
+                            <Spacer height={hPDInput} />
+                        </>
+                    ) : (
+                        <>
+                            <RowTitle text="排膿" height={hPus} />
+                            <RowTitle text="出血" height={hBleeding} />
+                            <RowTitle text="PD" height={hPDGrid} className="items-start pt-2" />
+                            <Spacer height={hPDInput} />
+                        </>
+                    )}
+                </div>
             </div>
 
-            {/* TOOTH ID SPACER */}
-            <div className="h-[52px] w-full shrink-0 flex items-center justify-center text-[10px] text-slate-300">
-                <div className="w-full border-y border-slate-200 py-2 text-center bg-slate-50">部位</div>
+            {/* TOOTH ID SECTION */}
+            <div 
+                style={{ height: `${hID}px` }}
+                className="flex items-center justify-center text-[11px] font-black text-slate-500 bg-slate-200 border-y border-slate-300 shadow-inner"
+            >
+                部位
             </div>
 
-            {/* BOTTOM SECTION */}
-            <div className="flex-1 flex flex-col justify-start items-center w-full">
-                {/* Row Titles (Conditional) */}
-                {isLarge && (
-                    <div className="w-full">
-                        <div className="h-[42px]"></div> {/* Pocket Depth Input Spacer */}
-                        <RowTitle text="出血" height="h-[26px]" />
-                        <RowTitle text="排膿" height="h-[26px]" />
-                        {jaw === 'lower' && <RowTitle text="動揺" height="h-[28px]" />}
-                    </div>
-                )}
-
-                {/* Side Label (Prominent) */}
-                <div className="flex-1 flex items-center justify-center mt-2">
-                    <span className="[writing-mode:vertical-rl] tracking-widest text-lg bg-slate-100 px-1 py-4 rounded-md text-slate-600 shadow-sm border border-slate-200">{bottomText}</span>
+            {/* BOTTOM BLOCK */}
+            <div className="flex">
+                {/* Vertical Side Label */}
+                <div className="w-8 flex items-center justify-center bg-slate-100 border-r border-slate-200">
+                    <span className="[writing-mode:vertical-rl] tracking-widest text-sm font-black text-slate-600 drop-shadow-sm">{bottomText}</span>
+                </div>
+                {/* Row Titles */}
+                <div className="w-10 flex flex-col">
+                    {jaw === 'upper' ? (
+                        <>
+                            <Spacer height={hPDInput} />
+                            <RowTitle text="出血" height={hBleeding} />
+                            <RowTitle text="排膿" height={hPus} />
+                            <RowTitle text="PD" height={hPDGrid} className="items-start pt-2" />
+                        </>
+                    ) : (
+                        <>
+                            <Spacer height={hPDInput} />
+                            <RowTitle text="出血" height={hBleeding} />
+                            <RowTitle text="排膿" height={hPus} />
+                            <RowTitle text="PD" height={hPDGrid} className="items-start pt-2" />
+                            <RowTitle text="動揺" height={hMobility} />
+                            <Spacer height={hPlaque} />
+                        </>
+                    )}
                 </div>
             </div>
         </div>
