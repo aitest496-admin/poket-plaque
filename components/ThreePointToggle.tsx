@@ -24,8 +24,10 @@ const ThreePointToggle: React.FC<ThreePointToggleProps> = ({ values, onChange, t
     ? displayPoints 
     : (singlePoint ? [1] : [0, 1, 2]);
 
+  const heightClass = singlePoint ? 'h-[24px]' : 'h-[36px]';
+
   return (
-    <div className="flex h-[24px] border-b border-[#ccc] bg-white w-full text-[9px] touch-none">
+    <div className={`flex ${heightClass} border-b border-[#ccc] bg-white w-full text-[9px] touch-none`}>
       {pointsToRender.map((index) => {
         const isActive = values[index];
         return (

@@ -103,12 +103,19 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
   const lingualSinglePoint = is1Point;
   const buccalSinglePoint = is1Point;
 
-  const mobilityBtnClass = `${is1Point ? 'w-[12px] text-[10px]' : 'w-[18px] text-[14px]'} h-full leading-none font-bold flex items-center justify-center text-gray-500 hover:text-black hover:bg-gray-200 rounded`;
+  const isLarge = !is1Point;
+  const toothWidthClass = is1Point ? 'min-w-[28px] max-w-[45px]' : 'min-w-[85px] max-w-[150px]';
+  const mobilityRowHeight = isLarge ? 'h-[36px]' : 'h-[24px]';
+  const mobilityTextSize = isLarge ? 'text-[18px]' : 'text-[12px]';
+  const toothIdTextSize = isLarge ? 'text-[18px]' : 'text-[12px]';
+  const toothIdPadding = isLarge ? 'py-[6px]' : 'py-[2px]';
+
+  const mobilityBtnClass = `${is1Point ? 'w-[12px] text-[10px]' : 'w-[24px] text-[20px]'} h-full leading-none font-bold flex items-center justify-center text-gray-500 hover:text-black hover:bg-gray-200 rounded`;
 
   // Missing Overlay Component
   const MissingOverlay = () => (
     <div className="absolute inset-0 bg-slate-300/80 z-30 flex items-center justify-center pointer-events-auto cursor-not-allowed">
-      <span className="text-[10px] font-bold text-slate-600 bg-white/50 px-1 rounded transform -rotate-45">欠損</span>
+      <span className={`${isLarge ? 'text-[16px]' : 'text-[10px]'} font-bold text-slate-600 bg-white/50 px-1 rounded transform -rotate-45`}>欠損</span>
     </div>
   );
 
@@ -150,7 +157,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
     };
 
     return (
-      <div className={`flex-1 flex flex-col border border-[#999] bg-white select-none shadow-sm min-w-[28px] max-w-[45px]`}>
+      <div className={`flex-1 flex flex-col border border-[#999] bg-white select-none shadow-sm ${toothWidthClass}`}>
         {/* === UPPER JAW (Top Section) === */}
         <div className="flex flex-col w-full relative">
           {data.isMissing && <MissingOverlay />}
@@ -164,9 +171,9 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
             />
           </div>
           {/* Mobility (Upper) */}
-          <div className="h-[24px] flex items-center justify-between px-1 bg-[#fafafa] border-b border-[#ccc]">
+          <div className={`${mobilityRowHeight} flex items-center justify-between px-1 bg-[#fafafa] border-b border-[#ccc]`}>
             <button className={mobilityBtnClass} onClick={() => handleMobilityChange(-1)}>-</button>
-            <span className="text-[12px] font-bold flex-1 text-center">{data.mobility}</span>
+            <span className={`${mobilityTextSize} font-bold flex-1 text-center`}>{data.mobility}</span>
             <button className={mobilityBtnClass} onClick={() => handleMobilityChange(1)}>+</button>
           </div>
           {/* Measurements (Upper Buccal) */}
@@ -183,7 +190,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
 
         {/* === TOOTH ID (上顎) === */}
         <div
-          className={`font-bold py-[2px] text-[12px] text-center border-b border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
+          className={`font-bold ${toothIdPadding} ${toothIdTextSize} text-center border-b border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
           onClick={handleStatusChange}
           title="上顎: クリックで状態切替 (永久歯/欠損/乳歯)"
         >
@@ -191,7 +198,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
         </div>
         {/* === TOOTH ID (下顎) === */}
         <div
-          className={`font-bold py-[2px] text-[12px] text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(lowerData)}`}
+          className={`font-bold ${toothIdPadding} ${toothIdTextSize} text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(lowerData)}`}
           onClick={() => {
             let nextState = { isMissing: false, isPrimary: false };
             if (lowerData.id >= 6) {
@@ -231,9 +238,9 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
           <ThreePointToggle type="pus" values={lowerData.pus.buccal} onChange={(idx, val) => updateLower('pus', 'buccal', idx, val)} singlePoint={true} />
 
           {/* Mobility (Lower) */}
-          <div className="h-[24px] flex items-center justify-between px-1 bg-[#fafafa] border-t border-[#ccc]">
+          <div className={`${mobilityRowHeight} flex items-center justify-between px-1 bg-[#fafafa] border-t border-[#ccc]`}>
             <button className={mobilityBtnClass} onClick={() => handleLowerMobilityChange(-1)}>-</button>
-            <span className="text-[12px] font-bold flex-1 text-center">{lowerData.mobility}</span>
+            <span className={`${mobilityTextSize} font-bold flex-1 text-center`}>{lowerData.mobility}</span>
             <button className={mobilityBtnClass} onClick={() => handleLowerMobilityChange(1)}>+</button>
           </div>
           {/* Plaque Diagram (Lower) */}
@@ -262,7 +269,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
     if (jaw === 'upper') {
       // Layout: Buccal (Top) -> ID -> Lingual (Bottom)
       return (
-        <div className="flex-1 flex flex-col border border-[#999] bg-white select-none shadow-sm min-w-[50px] max-w-[120px]">
+        <div className={`flex-1 flex flex-col border border-[#999] bg-white select-none shadow-sm ${toothWidthClass}`}>
           {/* TOP BLOCK: BUCCAL (2-point, Outer) */}
           <div className="flex flex-col w-full relative">
             {data.isMissing && <MissingOverlay />}
@@ -272,9 +279,9 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
             </div>
 
             {/* 2. Mobility (Next to Pus) */}
-            <div className="h-[24px] flex items-center justify-between px-1 bg-[#fafafa] border-b border-[#ccc]">
+            <div className={`${mobilityRowHeight} flex items-center justify-between px-1 bg-[#fafafa] border-b border-[#ccc]`}>
               <button className={mobilityBtnClass} onClick={() => handleMobilityChange(-1)}>-</button>
-              <span className="text-[12px] font-bold flex-1 text-center">{data.mobility}</span>
+              <span className={`${mobilityTextSize} font-bold flex-1 text-center`}>{data.mobility}</span>
               <button className={mobilityBtnClass} onClick={() => handleMobilityChange(1)}>+</button>
             </div>
 
@@ -295,7 +302,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
 
           {/* TOOTH ID */}
           <div
-            className={`font-bold py-[2px] text-[12px] text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
+            className={`font-bold ${toothIdPadding} ${toothIdTextSize} text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
             onClick={handleStatusChange}
             title="クリックで状態切替 (永久歯/欠損/乳歯)"
           >
@@ -325,7 +332,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
       // jaw === 'lower'
       // Layout: Lingual (Top) -> ID -> Buccal (Bottom)
       return (
-        <div className="flex-1 flex flex-col border border-[#999] bg-white select-none shadow-sm min-w-[50px] max-w-[120px]">
+        <div className={`flex-1 flex flex-col border border-[#999] bg-white select-none shadow-sm ${toothWidthClass}`}>
           {/* TOP BLOCK: LINGUAL (2-point, Inner) */}
           <div className="flex flex-col w-full relative">
             {data.isMissing && <MissingOverlay />}
@@ -346,7 +353,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
 
           {/* TOOTH ID */}
           <div
-            className={`font-bold py-[2px] text-[12px] text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
+            className={`font-bold ${toothIdPadding} ${toothIdTextSize} text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
             onClick={handleStatusChange}
             title="クリックで状態切替 (永久歯/欠損/乳歯)"
           >
@@ -371,9 +378,9 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
             <ThreePointToggle type="pus" values={data.pus.buccal} onChange={(idx, val) => updateMeasurement('pus', 'buccal', idx, val)} displayPoints={points4} />
 
             {/* 4. Mobility */}
-            <div className="h-[24px] flex items-center justify-between px-1 bg-[#fafafa] border-t border-[#ccc]">
+            <div className={`${mobilityRowHeight} flex items-center justify-between px-1 bg-[#fafafa] border-t border-[#ccc]`}>
               <button className={mobilityBtnClass} onClick={() => handleMobilityChange(-1)}>-</button>
-              <span className="text-[12px] font-bold flex-1 text-center">{data.mobility}</span>
+              <span className={`${mobilityTextSize} font-bold flex-1 text-center`}>{data.mobility}</span>
               <button className={mobilityBtnClass} onClick={() => handleMobilityChange(1)}>+</button>
             </div>
 
@@ -410,12 +417,12 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
               variant="simple"
             />
           </div>
-          <div className="h-[24px] flex items-center justify-between px-1 bg-[#fafafa] border-b border-[#ccc]">
+          <div className={`${mobilityRowHeight} flex items-center justify-between px-1 bg-[#fafafa] border-b border-[#ccc]`}>
             <button
               className={mobilityBtnClass}
               onClick={() => handleMobilityChange(-1)}
             >-</button>
-            <span className="text-[12px] font-bold flex-1 text-center">{data.mobility}</span>
+            <span className={`${mobilityTextSize} font-bold flex-1 text-center`}>{data.mobility}</span>
             <button
               className={mobilityBtnClass}
               onClick={() => handleMobilityChange(1)}
@@ -451,12 +458,12 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
 
       {jaw === 'lower' && (
         <>
-          <div className="h-[24px] flex items-center justify-between px-1 bg-[#fafafa] border-t border-[#ccc]">
+          <div className={`${mobilityRowHeight} flex items-center justify-between px-1 bg-[#fafafa] border-t border-[#ccc]`}>
             <button
               className={mobilityBtnClass}
               onClick={() => handleMobilityChange(-1)}
             >-</button>
-            <span className="text-[12px] font-bold flex-1 text-center">{data.mobility}</span>
+            <span className={`${mobilityTextSize} font-bold flex-1 text-center`}>{data.mobility}</span>
             <button
               className={mobilityBtnClass}
               onClick={() => handleMobilityChange(1)}
@@ -507,14 +514,14 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
   );
 
   return (
-    <div className={`flex-1 flex flex-col border border-[#999] bg-white select-none shadow-sm ${is1Point ? 'min-w-[28px] max-w-[45px]' : 'min-w-[50px] max-w-[120px]'}`}>
+    <div className={`flex-1 flex flex-col border border-[#999] bg-white select-none shadow-sm ${toothWidthClass}`}>
 
       {/* TOP BLOCK */}
       {jaw === 'upper' ? complexAContent : complexBContent}
 
       {/* ================= TOOTH ID ================= */}
       <div
-        className={`font-bold py-[2px] text-[12px] text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
+        className={`font-bold ${toothIdPadding} ${toothIdTextSize} text-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
         onClick={handleStatusChange}
         title="クリックで状態切替 (永久歯/欠損/乳歯)"
       >

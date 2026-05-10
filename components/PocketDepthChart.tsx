@@ -32,6 +32,13 @@ const PocketDepthChart: React.FC<PocketDepthChartProps> = ({ values, onChange, i
     }
   };
 
+  // Dynamic sizes based on method
+  const isLarge = !singlePoint;
+  const inputHeight = isLarge ? 'h-[50px]' : 'h-[39px]';
+  const cellHeight = isLarge ? 'h-[30px]' : 'h-[19px]';
+  const inputTextSize = isLarge ? 'text-[20px]' : 'text-[14px]';
+  const cellTextSize = isLarge ? 'text-[18px]' : 'text-[10px]';
+
   return (
     <div className="flex justify-between px-[2px] w-full bg-white touch-none relative">
       {points.map((pointIndex) => (
@@ -45,8 +52,8 @@ const PocketDepthChart: React.FC<PocketDepthChartProps> = ({ values, onChange, i
             inputMode="numeric"
             pattern="[0-9]*"
             className={`
-               h-[39px] border border-[#ccc] mb-[0.5px] w-full 
-               text-center text-[14px] font-bold bg-slate-50 
+               ${inputHeight} border border-[#ccc] mb-[0.5px] w-full 
+               text-center ${inputTextSize} font-bold bg-slate-50 
                focus:bg-blue-600 focus:text-white focus:outline-none focus:border-blue-700 rounded-none p-0
             `}
             value={values[pointIndex] ?? ''}
@@ -76,8 +83,8 @@ const PocketDepthChart: React.FC<PocketDepthChartProps> = ({ values, onChange, i
                 }}
                 onPointerEnter={(e) => handlePointerEnter(e, pointIndex, level)}
                 className={`
-                  h-[19px] border border-[#ccc] mb-[0.5px]
-                  flex items-center justify-center text-[10px] cursor-pointer select-none
+                  ${cellHeight} border border-[#ccc] mb-[0.5px]
+                  flex items-center justify-center ${cellTextSize} cursor-pointer select-none
                   ${getBgClass(level)}
                   ${isSelected ? '!bg-blue-600 !text-white relative z-10 font-bold border-blue-800' : ''}
                 `}

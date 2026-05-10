@@ -151,7 +151,7 @@ const SideLabels = ({ jaw }: { jaw: 'upper' | 'lower' }) => {
     const bottomText = jaw === 'upper' ? '口蓋側' : '頬側';
 
     return (
-        <div className="flex flex-col self-stretch items-center min-w-[40px] select-none text-slate-400 font-bold text-lg py-1">
+        <div className="flex flex-col self-stretch items-center min-w-[30px] select-none text-slate-400 font-bold text-sm py-1">
             <div className="flex-1 flex flex-col justify-end items-center pb-[145px]">
                 <span className="[writing-mode:vertical-rl] tracking-widest">{topText}</span>
             </div>
@@ -735,7 +735,7 @@ const App: React.FC = () => {
                             className="flex flex-wrap w-[200%] h-[200%] transition-transform duration-500 ease-in-out will-change-transform"
                             style={{ transform: getTranslate() }}
                         >
-                            <div className="w-1/2 h-1/2 flex items-center justify-start bg-slate-100 p-1 md:p-2 pr-8 md:pr-24">
+                            <div className="w-1/2 h-1/2 flex items-center justify-start bg-slate-100 p-1 md:p-2 pr-2 md:pr-4">
                                 <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-auto">
                                     <div className="flex justify-between w-full h-full gap-[1px] items-start">
                                         {currentTeethData.UR.map(tooth => (
@@ -746,7 +746,7 @@ const App: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="w-1/2 h-1/2 flex items-center justify-end bg-slate-100 p-1 md:p-2 pl-8 md:pl-24">
+                            <div className="w-1/2 h-1/2 flex items-center justify-end bg-slate-100 p-1 md:p-2 pl-2 md:pl-4">
                                 <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-auto">
                                     <div className="flex justify-between w-full h-full gap-[1px] items-start">
                                         <SideLabels jaw="upper" />
@@ -757,7 +757,7 @@ const App: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="w-1/2 h-1/2 flex items-center justify-start bg-slate-100 p-1 md:p-2 pr-8 md:pr-24">
+                            <div className="w-1/2 h-1/2 flex items-center justify-start bg-slate-100 p-1 md:p-2 pr-2 md:pr-4">
                                 <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-auto">
                                     <div className="flex justify-between w-full h-full gap-[1px] items-start">
                                         {currentTeethData.LR.map(tooth => (
@@ -768,7 +768,7 @@ const App: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="w-1/2 h-1/2 flex items-center justify-end bg-slate-100 p-1 md:p-2 pl-8 md:pl-24">
+                            <div className="w-1/2 h-1/2 flex items-center justify-end bg-slate-100 p-1 md:p-2 pl-2 md:pl-4">
                                 <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-auto">
                                     <div className="flex justify-between w-full h-full gap-[1px] items-start">
                                         <SideLabels jaw="lower" />
