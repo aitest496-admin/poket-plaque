@@ -903,18 +903,10 @@ const App: React.FC = () => {
                     )}
                 </div>
                 {/* Controls Row */}
-                <div className="max-w-full mx-auto grid grid-cols-3 items-center gap-4">
-
-                    {/* Column 1: Tabs, Save, Compare, Preview - Left aligned, spread */}
-                    <div className="flex items-center pr-2 gap-3">
-                        {/* MiniMap moved to Left Edge */}
-                        <div className={`${measurementMethod === '1-point' || isPreviewMode || isCompareMode ? 'hidden' : 'block'}`}>
-                            <MiniMap
-                                current={currentQuadrant}
-                                onSelect={setCurrentQuadrant}
-                            />
-                        </div>
-
+                {/* Controls Row - Improved for iPad balance */}
+                <div className="max-w-full mx-auto flex items-center justify-between gap-3 px-1">
+                    {/* Left Group */}
+                    <div className="flex items-center gap-2 shrink-0 flex-1 justify-start">
                         <button
                             onClick={() => setIsSettingsOpen(true)}
                             className="p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center outline-none"
@@ -925,115 +917,14 @@ const App: React.FC = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                             </svg>
                         </button>
-
                         <MethodSelector current={measurementMethod} onChange={(m) => { setMeasurementMethod(m); if (m !== '6-point') setIsPisaPreview(false); }} />
-
-                        <div className="flex items-center gap-2">
-                            {/* 保存アイコン */}
-                            {!isPreviewMode && (
-                                <WithTooltip label="保存">
-                                    <button
-                                        className={`p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center`}
-                                        aria-label="Save"
-                                        onClick={() => handleSave()}
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
-                                        </svg>
-                                    </button>
-                                </WithTooltip>
-                            )}
-
-                            {/* PISA切り替えトグル - Visible only in Preview Mode & 6-point method */}
-                            {isPreviewMode && measurementMethod === '6-point' && (
-                                <div className="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 shadow-inner h-9">
-                                    <button
-                                        onClick={() => { setIsPisaPreview(false); setIsCompareMode(false); }}
-                                        className={`px-3 h-full rounded-md text-xs font-bold transition-all ${!isPisaPreview
-                                            ? 'bg-white text-slate-800 shadow-sm'
-                                            : 'text-slate-500 hover:text-slate-700'
-                                            }`}
-                                    >
-                                        チャート
-                                    </button>
-                                    <button
-                                        onClick={() => { setIsPisaPreview(true); setIsCompareMode(false); }}
-                                        className={`px-3 h-full rounded-md text-xs font-bold transition-all ${isPisaPreview
-                                            ? 'bg-emerald-600 text-white shadow-sm'
-                                            : 'text-slate-500 hover:text-slate-700'
-                                            }`}
-                                    >
-                                        PISA
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* 比較アイコン (New) - Visible only in Preview Mode (Chart mode only) */}
-                            {isPreviewMode && !isPisaPreview && (
-                                <WithTooltip label={isCompareMode ? "比較終了" : "比較モード"}>
-                                    <button
-                                        className={`p-2 border rounded-lg shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center
-                        ${isCompareMode
-                                                ? 'bg-indigo-600 text-white border-indigo-700 hover:bg-indigo-700'
-                                                : 'bg-white text-slate-600 border-slate-200 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50'
-                                            }
-                    `}
-                                        aria-label={isCompareMode ? "Exit Compare" : "Compare"}
-                                        onClick={handleCompareClick}
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 8.25V6a2.25 2.25 0 0 0-2.25-2.25H6A2.25 2.25 0 0 0 3.75 6v8.25A2.25 2.25 0 0 0 6 16.5h2.25m8.25-8.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-7.5A2.25 2.25 0 0 1 8.25 18v-1.5m8.25-8.25h-6a2.25 2.25 0 0 0-2.25 2.25v6" />
-                                        </svg>
-                                    </button>
-                                </WithTooltip>
-                            )}
-
-                            {/* プレビューアイコン (Toggle) */}
-                            <WithTooltip label={isPreviewMode ? "プレビューを閉じる" : "プレビュー"}>
-                                <button
-                                    className={`p-2 border rounded-lg shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center
-                        ${isPreviewMode
-                                            ? 'bg-slate-800 text-white border-slate-900 hover:bg-slate-700'
-                                            : 'bg-white text-slate-600 border-slate-200 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50'
-                                        }
-                    `}
-                                    aria-label={isPreviewMode ? "Close Preview" : "Preview"}
-                                    onClick={() => {
-                                        if (isPreviewMode) {
-                                            setIsPreviewMode(false);
-                                            setIsPisaPreview(false); // Reset PISA preview on close
-                                            setIsCompareMode(false); // Reset compare mode on close
-                                            setCompareTargetDates([]);
-                                            setZoomLevel(0.7); // Reset zoom level
-                                            setPreviewContentHeight(0); // Reset content height
-                                        } else {
-                                            if (isDirty) {
-                                                setIsSaveConfirmModalOpen(true);
-                                            } else {
-                                                setIsPreviewMode(true);
-                                            }
-                                        }
-                                    }}
-                                >
-                                    {isPreviewMode ? (
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    ) : (
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                        </svg>
-                                    )}
-                                </button>
-                            </WithTooltip>
+                        <div className={`${measurementMethod === '1-point' || isPreviewMode || isCompareMode ? 'hidden' : 'block'}`}>
+                            <MiniMap current={currentQuadrant} onSelect={setCurrentQuadrant} />
                         </div>
                     </div>
 
-                    {/* Column 2: Date Picker and History/Zoom - Precisely Centered */}
-                    <div className="flex justify-center items-center gap-3">
-
-                        {/* Custom Date Picker Trigger */}
+                    {/* Center Group */}
+                    <div className="flex items-center gap-2 justify-center shrink-0">
                         <button
                             onClick={() => !isPreviewMode && !isCompareMode && setIsCalendarOpen(true)}
                             disabled={isPreviewMode || isCompareMode}
@@ -1044,14 +935,11 @@ const App: React.FC = () => {
                             </svg>
                             {selectedDate.replace(/-/g, '/')}
                         </button>
-
-                        {/* History Button - Load latest examination data */}
                         {!isPreviewMode && !isCompareMode && (
-                            <WithTooltip label="直近の検査データを読み込みます">
+                            <WithTooltip label="直近の履歴">
                                 <button
                                     onClick={handleLoadLatestHistory}
                                     className="p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-amber-600 hover:border-amber-200 hover:bg-amber-50 shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center gap-1"
-                                    aria-label="Load Latest History"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -1060,70 +948,82 @@ const App: React.FC = () => {
                                 </button>
                             </WithTooltip>
                         )}
-
-                        {(isPreviewMode || isCompareMode) && (
-                            // Zoom Controls (Visible in Preview OR Compare Mode)
-                            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-0.5 shadow-sm h-9">
-                                <button
-                                    onClick={handleZoomOut}
-                                    className="w-8 h-full flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded active:bg-slate-200 transition-colors font-bold text-lg leading-none pb-1"
-                                    title="縮小"
-                                >−</button>
-                                <span className="text-xs font-bold w-12 text-center text-slate-700 select-none">{Math.round(zoomLevel * 100)}%</span>
-                                <button
-                                    onClick={handleZoomIn}
-                                    className="w-8 h-full flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded active:bg-slate-200 transition-colors font-bold text-lg leading-none pb-1"
-                                    title="拡大"
-                                >+</button>
-                            </div>
-                        )}
                     </div>
 
-                    {/* Column 3: Delete Button and MiniMap - Right aligned, spread */}
-                    <div className="flex justify-end items-center pl-2 gap-3">
-                        {/* Bulk Status Buttons - only visible in Edit mode */}
+                    {/* Right Group */}
+                    <div className="flex items-center gap-2 shrink-0 flex-1 justify-end">
+                        {(isPreviewMode || isCompareMode) && (
+                            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-0.5 shadow-sm h-9">
+                                <button onClick={handleZoomOut} className="w-8 h-full flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded active:bg-slate-200 transition-colors font-bold text-lg leading-none pb-1" title="縮小">−</button>
+                                <span className="text-xs font-bold w-12 text-center text-slate-700 select-none">{Math.round(zoomLevel * 100)}%</span>
+                                <button onClick={handleZoomIn} className="w-8 h-full flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded active:bg-slate-200 transition-colors font-bold text-lg leading-none pb-1" title="拡大">+</button>
+                            </div>
+                        )}
+                        {isPreviewMode && measurementMethod === '6-point' && (
+                            <div className="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 shadow-inner h-9">
+                                <button onClick={() => { setIsPisaPreview(false); setIsCompareMode(false); }} className={`px-3 h-full rounded-md text-xs font-bold transition-all ${!isPisaPreview ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>チャート</button>
+                                <button onClick={() => { setIsPisaPreview(true); setIsCompareMode(false); }} className={`px-3 h-full rounded-md text-xs font-bold transition-all ${isPisaPreview ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-500'}`}>PISA</button>
+                            </div>
+                        )}
+                        {isPreviewMode && !isPisaPreview && (
+                            <WithTooltip label={isCompareMode ? "比較終了" : "比較モード"}>
+                                <button
+                                    className={`p-2 border rounded-lg shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center ${isCompareMode ? 'bg-indigo-600 text-white border-indigo-700' : 'bg-white text-slate-600 border-slate-200'}`}
+                                    onClick={handleCompareClick}
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 8.25V6a2.25 2.25 0 0 0-2.25-2.25H6A2.25 2.25 0 0 0 3.75 6v8.25A2.25 2.25 0 0 0 6 16.5h2.25m8.25-8.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-7.5A2.25 2.25 0 0 1 8.25 18v-1.5m8.25-8.25h-6a2.25 2.25 0 0 0-2.25 2.25v6" /></svg>
+                                </button>
+                            </WithTooltip>
+                        )}
+                        {/* Bulk Status (Edit Mode only) */}
                         {!isPreviewMode && !isCompareMode && (
                             <div className="flex items-center gap-1">
-                                <WithTooltip label="全顎を欠損にします">
-                                    <button
-                                        onClick={() => handleBulkStatusChange('all_missing')}
-                                        className="h-9 px-2 text-xs font-bold bg-white text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-colors"
-                                    >
-                                        全顎欠損
-                                    </button>
+                                <WithTooltip label="全顎欠損">
+                                    <button onClick={() => handleBulkStatusChange('all_missing')} className="h-9 px-2 text-[10px] font-bold bg-white text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 shadow-sm transition-colors">欠損</button>
                                 </WithTooltip>
-                                <WithTooltip label="1-5番を乳歯、6-8番を欠損にします">
-                                    <button
-                                        onClick={() => handleBulkStatusChange('all_primary')}
-                                        className="h-9 px-2 text-xs font-bold bg-white text-green-600 border border-slate-200 rounded-lg hover:bg-green-50 hover:text-green-700 shadow-sm transition-colors"
-                                    >
-                                        全顎乳歯
-                                    </button>
+                                <WithTooltip label="全顎乳歯">
+                                    <button onClick={() => handleBulkStatusChange('all_primary')} className="h-9 px-2 text-[10px] font-bold bg-white text-green-600 border border-slate-200 rounded-lg hover:bg-green-50 shadow-sm transition-colors">乳歯</button>
                                 </WithTooltip>
-                                <WithTooltip label="全ての歯を永久歯に戻します">
-                                    <button
-                                        onClick={() => handleBulkStatusChange('reset')}
-                                        className="h-9 px-2 text-xs font-bold bg-white text-blue-600 border border-slate-200 rounded-lg hover:bg-blue-50 hover:text-blue-700 shadow-sm transition-colors"
-                                    >
-                                        リセット
-                                    </button>
+                                <WithTooltip label="全て永久歯に戻す">
+                                    <button onClick={() => handleBulkStatusChange('reset')} className="h-9 px-2 text-[10px] font-bold bg-white text-blue-600 border border-slate-200 rounded-lg hover:bg-blue-50 shadow-sm transition-colors">戻す</button>
                                 </WithTooltip>
                             </div>
                         )}
 
-                        {/* 削除アイコン: 検査履歴とMAPの間に配置 */}
-                        <WithTooltip label="データ削除" className={isPreviewMode || isCompareMode ? 'invisible' : ''}>
+                        <WithTooltip label={isPreviewMode ? "閉じる" : "プレビュー"}>
                             <button
-                                className={`p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-red-600 hover:border-red-200 hover:bg-red-50 shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center`}
-                                aria-label="Delete"
-                                disabled={isPreviewMode || isCompareMode}
-                                onClick={() => setIsDeleteModalOpen(true)}
+                                className={`p-2 border rounded-lg shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center ${isPreviewMode ? 'bg-slate-800 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200'}`}
+                                onClick={() => {
+                                    if (isPreviewMode) {
+                                        setIsPreviewMode(false); setIsPisaPreview(false); setIsCompareMode(false); setCompareTargetDates([]); setZoomLevel(0.7); setPreviewContentHeight(0);
+                                    } else {
+                                        if (isDirty) setIsSaveConfirmModalOpen(true); else setIsPreviewMode(true);
+                                    }
+                                }}
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                                </svg>
+                                {isPreviewMode ? (
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                                )}
                             </button>
                         </WithTooltip>
+
+                        {!isPreviewMode && (
+                            <WithTooltip label="保存">
+                                <button className="p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-blue-600 h-9 flex items-center justify-center shadow-sm active:scale-95 transition-all" onClick={() => handleSave()}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" /></svg>
+                                </button>
+                            </WithTooltip>
+                        )}
+
+                        {!isPreviewMode && (
+                            <WithTooltip label="データ削除">
+                                <button className="p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-red-600 h-9 flex items-center justify-center shadow-sm active:scale-95 transition-all" onClick={() => setIsDeleteModalOpen(true)}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                                </button>
+                            </WithTooltip>
+                        )}
                     </div>
                 </div>
             </header>
