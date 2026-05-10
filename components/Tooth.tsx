@@ -274,7 +274,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
           <div className="flex flex-col w-full relative">
             {data.isMissing && <MissingOverlay />}
             {/* 1. Plaque (Most Outer / Top) */}
-            <div className="border-b border-[#ccc] w-full">
+            <div className={`border-b border-[#ccc] w-full ${isLarge ? 'h-[100px]' : ''}`}>
               <PlaqueDiagram value={data.plaque} onChange={handlePlaqueChange} onToggleAll={handlePlaqueToggleAll} variant="simple" />
             </div>
 
@@ -385,7 +385,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
             </div>
 
             {/* 5. Plaque */}
-            <div className="border-t border-[#ccc] w-full">
+            <div className={`border-t border-[#ccc] w-full ${isLarge ? 'h-[100px]' : ''}`}>
               <PlaqueDiagram value={data.plaque} onChange={handlePlaqueChange} onToggleAll={handlePlaqueToggleAll} variant="simple" />
             </div>
           </div>
@@ -409,7 +409,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
       {jaw === 'upper' && (
         <>
           {/* Plaque Diagram (Outer Most) */}
-          <div className="border-b border-[#ccc] w-full">
+          <div className={`border-b border-[#ccc] w-full ${isLarge ? 'h-[100px]' : ''}`}>
             <PlaqueDiagram
               value={data.plaque}
               onChange={handlePlaqueChange}
@@ -469,7 +469,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
               onClick={() => handleMobilityChange(1)}
             >+</button>
           </div>
-          <div className="border-t border-[#ccc] w-full">
+          <div className={`border-t border-[#ccc] w-full ${isLarge ? 'h-[100px]' : ''}`}>
             <PlaqueDiagram
               value={data.plaque}
               onChange={handlePlaqueChange}
