@@ -829,14 +829,14 @@ const App: React.FC = () => {
                             </button>
                         </WithTooltip>
 
-                        <div className="flex flex-col -gap-1">
-                            <span className="font-mono font-bold text-slate-400 text-[10px]">000000001</span>
+                        <div className="flex flex-col">
+                            <span className="font-mono font-bold text-slate-400 text-xs leading-tight">000000001</span>
                             <div className="flex items-center gap-1.5">
-                                <span className="font-black text-slate-800">吉田 太郎</span>
-                                <span className="text-slate-400 font-bold text-xs">様</span>
+                                <span className="font-black text-slate-800 text-xl leading-none">吉田 太郎</span>
+                                <span className="text-slate-400 font-bold text-sm">様</span>
                             </div>
                         </div>
-                        <span className="text-slate-400 text-[10px] font-bold ml-1">（1975/01/01）</span>
+                        <span className="text-slate-500 text-sm font-bold ml-1">（1975/01/01　51歳）</span>
                     </div>
 
                     {/* Execution Time Controls (Requirement 2, 3, 4) */}
