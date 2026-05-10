@@ -154,7 +154,7 @@ const SideLabels = ({ jaw, method }: { jaw: 'upper' | 'lower', method: Measureme
     const bottomSideText = jaw === 'upper' ? '口蓋側' : '頬側';
 
     // Exact heights matching Tooth.tsx rows (all border-box)
-    const hPlaque = 100;    // PlaqueDiagram h-[100px]
+    const hPlaque = 70;     // PlaqueDiagram h-[70px]
     const hMobility = 28;   // Mobility row h-[28px]
     const hPus = 26;        // ThreePointToggle h-[26px]
     const hBleeding = 26;   // ThreePointToggle h-[26px]

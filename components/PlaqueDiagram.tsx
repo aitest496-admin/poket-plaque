@@ -43,7 +43,7 @@ const PlaqueDiagram: React.FC<PlaqueDiagramProps> = ({ value, onChange, onToggle
 
   if (variant === 'simple') {
     return (
-        <div className="w-full aspect-square flex items-center justify-center bg-white touch-none p-[1px]">
+        <div className="w-full h-full flex items-center justify-center bg-white touch-none p-[1px]">
           <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-sm">
             {/* Top - Buccal */}
             <path d="M0 0 L100 0 L50 50 Z" {...getPathProps(Surface.Buccal)} />
