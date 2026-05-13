@@ -927,7 +927,12 @@ const App: React.FC = () => {
                     {/* Execution Time Controls & Preview Toggle */}
                     <div className="flex items-center gap-2">
                         {!isPreviewMode && !isCompareMode && (
-                            <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200 shadow-sm">
+                            <div className={`
+                                flex items-center gap-1 p-1 rounded-xl border shadow-sm transition-all duration-300
+                                ${totalMinutes >= 15 
+                                    ? 'bg-slate-50 border-slate-200' 
+                                    : 'bg-orange-50 border-orange-200 animate-pulse-slow'}
+                            `}>
                                 {/* Requirement 2: Set Now Button */}
                                 <button 
                                     onPointerDown={handleNowClick} 
@@ -952,6 +957,12 @@ const App: React.FC = () => {
                                     />
                                 </div>
 
+                                <div className="flex items-center gap-1 mr-1">
+                                    <span className={`text-[13px] font-black ${totalMinutes < 15 ? 'text-orange-700' : 'text-slate-700'}`}>
+                                        {totalMinutes}分
+                                    </span>
+                                </div>
+
                                 {/* Requirement 2: Quick Add Button */}
                                 <button 
                                     onPointerDown={handleAdd5Min} 
@@ -959,32 +970,6 @@ const App: React.FC = () => {
                                 >
                                     +5分
                                 </button>
-                            </div>
-                        )}
-                        
-                        {!isPreviewMode && !isCompareMode && (
-                            /* Requirement 4: Validation Display */
-                            <div className={`
-                                flex items-center gap-1.5 px-3 py-1.5 rounded-xl border shadow-sm transition-all duration-300
-                                ${totalMinutes >= 15 
-                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
-                                    : 'bg-orange-50 border-orange-200 text-orange-700 animate-pulse-slow'}
-                            `}>
-                                {totalMinutes >= 15 ? (
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                                    </svg>
-                                ) : (
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                    </svg>
-                                )}
-                                <span className="text-[13px] font-black whitespace-nowrap">
-                                    {totalMinutes}分
-                                </span>
-                                {totalMinutes < 15 && (
-                                    <span className="text-[10px] font-bold opacity-80">15分未満です</span>
-                                )}
                             </div>
                         )}
 
