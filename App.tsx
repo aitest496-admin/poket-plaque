@@ -662,7 +662,7 @@ const App: React.FC = () => {
         if (isPreviewMode) {
             return (
                 <div
-                    className="w-full h-full overflow-auto bg-slate-500/20 print:p-0 print:bg-white print:overflow-visible touch-pan-x touch-pan-y"
+                    className="w-full bg-transparent print:p-0 print:bg-white print:overflow-visible touch-pan-x touch-pan-y"
                     onTouchStart={handleTouchStart}
                     onTouchMove={handleTouchMove}
                     onTouchEnd={() => { touchStartDist.current = 0; }}
@@ -724,12 +724,19 @@ const App: React.FC = () => {
 
                                         {/* Comparison Chart Body */}
                                         <div className="bg-white shadow-xl border-[6px] border-indigo-200 print:shadow-none print:border-2 print:border-slate-300">
-                                            {/* Overlay mask to slightly dim or distinct comparison charts? Optional. Keeping it clear for now. */}
-                                            <DentalChartPrintView
-                                                data={viewData}
-                                                date={date}
-                                                method={measurementMethod}
-                                            />
+                                            {isPisaPreview ? (
+                                                <PisaPreview
+                                                    data={dataForDate['6-point']}
+                                                    date={date}
+                                                    method={'6-point'}
+                                                />
+                                            ) : (
+                                                <DentalChartPrintView
+                                                    data={viewData}
+                                                    date={date}
+                                                    method={measurementMethod}
+                                                />
+                                            )}
                                         </div>
                                     </div>
                                 );
@@ -763,7 +770,7 @@ const App: React.FC = () => {
 
                 <div className="flex-1 h-full overflow-hidden relative border border-slate-200 bg-slate-50 rounded-lg shadow-inner">
                     {measurementMethod === '1-point' ? (
-                        <div className="w-full h-full overflow-auto p-2 flex items-start justify-center touch-none select-none">
+                        <div className="w-full min-h-full overflow-auto p-2 flex items-start justify-center touch-none select-none">
                             <div className="flex justify-center gap-1">
                                 <div className="flex gap-[1px] bg-white p-1 rounded border border-slate-300 shadow-sm">
                                     {currentTeethData.UR.map((tooth, index) => (
@@ -800,7 +807,7 @@ const App: React.FC = () => {
                             style={{ transform: getTranslate() }}
                         >
                             <div className="w-1/2 h-1/2 flex items-center justify-start bg-slate-100 p-0.5">
-                                <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-hidden">
+                                <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col items-center overflow-auto">
                                     <div className="flex w-full h-full gap-[1px] items-start">
                                         {currentTeethData.UR.map(tooth => (
                                             <Tooth key={tooth.id} data={tooth} onUpdate={(t) => handleToothUpdate('UR', t)} jaw="upper" method={measurementMethod} />
@@ -811,7 +818,7 @@ const App: React.FC = () => {
                             </div>
 
                             <div className="w-1/2 h-1/2 flex items-center justify-end bg-slate-100 p-0.5">
-                                <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-hidden">
+                                <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col items-center overflow-auto">
                                     <div className="flex w-full h-full gap-[1px] items-start">
                                         <SideLabels jaw="upper" method={measurementMethod} />
                                         {currentTeethData.UL.map(tooth => (
@@ -822,7 +829,7 @@ const App: React.FC = () => {
                             </div>
 
                             <div className="w-1/2 h-1/2 flex items-center justify-start bg-slate-100 p-0.5">
-                                <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-hidden">
+                                <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col items-center overflow-auto">
                                     <div className="flex w-full h-full gap-[1px] items-start">
                                         {currentTeethData.LR.map(tooth => (
                                             <Tooth key={tooth.id} data={tooth} onUpdate={(t) => handleToothUpdate('LR', t)} jaw="lower" method={measurementMethod} />
@@ -833,7 +840,7 @@ const App: React.FC = () => {
                             </div>
 
                             <div className="w-1/2 h-1/2 flex items-center justify-end bg-slate-100 p-0.5">
-                                <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col justify-center overflow-hidden">
+                                <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col items-center overflow-auto">
                                     <div className="flex w-full h-full gap-[1px] items-start">
                                         <SideLabels jaw="lower" method={measurementMethod} />
                                         {currentTeethData.LL.map(tooth => (
@@ -868,7 +875,7 @@ const App: React.FC = () => {
     };
 
     return (
-        <div className="h-screen bg-slate-100 flex flex-col font-sans overflow-hidden text-slate-900 relative">
+        <div className="h-[100dvh] w-screen bg-slate-100 flex flex-col font-sans overflow-hidden text-slate-900 relative">
             {/* Toast Notification */}
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
@@ -903,9 +910,9 @@ const App: React.FC = () => {
                         <span className="text-slate-500 text-sm font-bold ml-1">（1975/01/01　51歳）</span>
                     </div>
 
-                    {/* Execution Time Controls (Requirement 2, 3, 4) */}
-                    {!isPreviewMode && !isCompareMode && (
-                        <div className="flex items-center gap-2">
+                    {/* Execution Time Controls & Preview Toggle */}
+                    <div className="flex items-center gap-2">
+                        {!isPreviewMode && !isCompareMode && (
                             <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200 shadow-sm">
                                 {/* Requirement 2: Set Now Button */}
                                 <button 
@@ -939,8 +946,10 @@ const App: React.FC = () => {
                                     +5分
                                 </button>
                             </div>
-                            
-                            {/* Requirement 4: Validation Display */}
+                        )}
+                        
+                        {!isPreviewMode && !isCompareMode && (
+                            /* Requirement 4: Validation Display */
                             <div className={`
                                 flex items-center gap-1.5 px-3 py-1.5 rounded-xl border shadow-sm transition-all duration-300
                                 ${totalMinutes >= 15 
@@ -963,8 +972,28 @@ const App: React.FC = () => {
                                     <span className="text-[10px] font-bold opacity-80">15分未満です</span>
                                 )}
                             </div>
-                        </div>
-                    )}
+                        )}
+
+                        <WithTooltip label={isPreviewMode ? "閉じる" : "プレビュー"}>
+                            <button
+                                className={`p-2 border rounded-lg shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center ${isPreviewMode ? 'bg-slate-800 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200'}`}
+                                onClick={() => {
+                                    if (isPreviewMode) {
+                                        setIsPreviewMode(false); setIsPisaPreview(false); setIsCompareMode(false); setCompareTargetDates([]); setZoomLevel(0.7); setPreviewContentHeight(0);
+                                    } else {
+                                        if (isDirty) setIsSaveConfirmModalOpen(true); else setIsPreviewMode(true);
+                                    }
+                                }}
+                            >
+                                {isPreviewMode ? (
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                                )}
+                            </button>
+                        </WithTooltip>
+                    </div>
+
                 </div>
                 {/* Controls Row */}
                 {/* Controls Row - Improved for iPad balance */}
@@ -1025,11 +1054,11 @@ const App: React.FC = () => {
                         )}
                         {isPreviewMode && measurementMethod === '6-point' && (
                             <div className="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 shadow-inner h-9">
-                                <button onClick={() => { setIsPisaPreview(false); setIsCompareMode(false); }} className={`px-3 h-full rounded-md text-xs font-bold transition-all ${!isPisaPreview ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>チャート</button>
-                                <button onClick={() => { setIsPisaPreview(true); setIsCompareMode(false); }} className={`px-3 h-full rounded-md text-xs font-bold transition-all ${isPisaPreview ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-500'}`}>PISA</button>
+                                <button onClick={() => { setIsPisaPreview(false); }} className={`px-3 h-full rounded-md text-xs font-bold transition-all ${!isPisaPreview ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>チャート</button>
+                                <button onClick={() => { setIsPisaPreview(true); }} className={`px-3 h-full rounded-md text-xs font-bold transition-all ${isPisaPreview ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-500'}`}>PISA</button>
                             </div>
                         )}
-                        {isPreviewMode && !isPisaPreview && (
+                        {isPreviewMode && (
                             <WithTooltip label={isCompareMode ? "比較終了" : "比較モード"}>
                                 <button
                                     className={`p-2 border rounded-lg shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center ${isCompareMode ? 'bg-indigo-600 text-white border-indigo-700' : 'bg-white text-slate-600 border-slate-200'}`}
@@ -1054,24 +1083,7 @@ const App: React.FC = () => {
                             </div>
                         )}
 
-                        <WithTooltip label={isPreviewMode ? "閉じる" : "プレビュー"}>
-                            <button
-                                className={`p-2 border rounded-lg shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center ${isPreviewMode ? 'bg-slate-800 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200'}`}
-                                onClick={() => {
-                                    if (isPreviewMode) {
-                                        setIsPreviewMode(false); setIsPisaPreview(false); setIsCompareMode(false); setCompareTargetDates([]); setZoomLevel(0.7); setPreviewContentHeight(0);
-                                    } else {
-                                        if (isDirty) setIsSaveConfirmModalOpen(true); else setIsPreviewMode(true);
-                                    }
-                                }}
-                            >
-                                {isPreviewMode ? (
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                                ) : (
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
-                                )}
-                            </button>
-                        </WithTooltip>
+
 
                         {!isPreviewMode && (
                             <WithTooltip label="保存">
@@ -1093,7 +1105,7 @@ const App: React.FC = () => {
             </header>
 
             {/* Main Content Area */}
-            <main className="flex-1 w-full flex items-center justify-center overflow-auto relative p-1 md:p-2 bg-slate-100 print:bg-white print:p-0 print:block">
+            <main className="flex-1 w-full overflow-auto relative bg-slate-100 print:bg-white print:p-0 print:block">
                 {renderContent()}
             </main>
 

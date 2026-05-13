@@ -1,20 +1,39 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# スマート歯周検査チャート (Smart Perio Chart)
 
-# Run and deploy your AI Studio app
+iPad等のタブレット端末に最適化された、高機能な歯周病検査記録アプリケーションです。
 
-This contains everything you need to run your app locally.
+## 🚀 主な機能
 
+- **高度な歯式入力**: 1点・4点・6点法の測定、出血(BOP)、排膿(P)、動揺度、プラーク(PCR)に対応。
+- **iPad最適化UI**: クアドラント（1/4顎）ごとの拡大表示、タッチフレンドリーな操作設計。
+- **PISA自動計算**: 検査データから歯周炎症表面積(PISA)を自動算出し、視覚化。
+- **過去データ比較**: 同一患者の過去の検査結果と現在の結果を並列表示して比較。
+- **運用管理**: 診療時間の自動計算、検査担当者のカラー管理、カレンダーによる履歴管理。
+- **オフライン対応**: IndexedDBを使用したローカル保存により、通信環境に左右されない動作を実現。
+
+## 📄 開発ドキュメント
+
+開発にあたってのより詳細な仕様、システム構成、データモデルについては、以下のドキュメントを参照してください。
+
+- [要件定義書 (requirement_definition.md)](./requirement_definition.md)
+
+## 🛠 実行方法
+
+**前提条件:** Node.js (v18以上推奨)
+
+1. **依存関係のインストール:**
+   ```bash
+   npm install
+   ```
+
+2. **環境変数の設定:**
+   `.env.local` を作成し、必要に応じて設定を行ってください。
+
+3. **開発サーバーの起動:**
+   ```bash
+   npm run dev
+   ```
+
+---
 View your app in AI Studio: https://ai.studio/apps/drive/1AyQtRYgnrrJ3FSF26k14o5Q4iMI_QtsM
 
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
