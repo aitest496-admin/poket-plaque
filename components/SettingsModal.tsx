@@ -33,7 +33,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                         </svg>
                         設定
                     </h2>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                    <button onPointerDown={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-slate-500">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -54,7 +54,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all pr-12 font-mono"
                             />
                             <button
-                                onClick={() => setIsVisible(!isVisible)}
+                                onPointerDown={() => setIsVisible(!isVisible)}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-slate-600 transition-colors"
                             >
                                 {isVisible ? (
@@ -78,13 +78,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
                 <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
                     <button
-                        onClick={onClose}
+                        onPointerDown={onClose}
                         className="flex-1 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-200 rounded-xl transition-all"
                     >
                         キャンセル
                     </button>
                     <button
-                        onClick={handleSave}
+                        onPointerDown={handleSave}
                         className="flex-1 px-4 py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 rounded-xl transition-all active:scale-95"
                     >
                         保存する

@@ -64,7 +64,20 @@ const Toast: React.FC<{ message: string; type: 'success' | 'error' | 'info'; onC
     );
 };
 
-// Tooltip Component will be defined inside App to access showLabels state
+// Tooltip Component (Stable definition outside App to prevent unmounting/remounting on state changes)
+const WithTooltip: React.FC<{ label: string; children: React.ReactNode; className?: string; showLabels?: boolean }> = ({ label, children, className = "", showLabels = true }) => (
+    <div className={`relative group flex items-center justify-center ${className}`}>
+        {children}
+        <div className={`
+            absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2.5 py-1.5 bg-slate-800 text-white text-xs font-bold rounded-md shadow-xl 
+            transition-all duration-200 pointer-events-none whitespace-nowrap z-[100] opacity-0 translate-y-1
+            ${showLabels ? 'group-hover:opacity-100 group-hover:translate-y-0' : ''}
+        `}>
+            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 rotate-45"></div>
+            {label}
+        </div>
+    </div>
+);
 
 // MiniMap Component for visual navigation
 const MiniMap: React.FC<{ current: Quadrant; onSelect: (q: Quadrant) => void; disabled?: boolean }> = ({ current, onSelect, disabled }) => {
@@ -73,7 +86,7 @@ const MiniMap: React.FC<{ current: Quadrant; onSelect: (q: Quadrant) => void; di
         const japaneseLabel: Record<Quadrant, string> = { UR: '右上', UL: '左上', LR: '右下', LL: '左下' };
         return (
             <button
-                onClick={() => !disabled && onSelect(q)}
+                onPointerDown={() => !disabled && onSelect(q)}
                 disabled={disabled}
                 className={`w-10 h-8 flex items-center justify-center text-[10px] font-bold border transition-all duration-200 select-none
           ${isActive
@@ -342,20 +355,7 @@ const App: React.FC = () => {
 
 
 
-    // Tooltip Component integrated with auto-hide state
-    const WithTooltip: React.FC<{ label: string; children: React.ReactNode; className?: string }> = ({ label, children, className = "" }) => (
-        <div className={`relative group flex items-center justify-center ${className}`}>
-            {children}
-            <div className={`
-                absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2.5 py-1.5 bg-slate-800 text-white text-xs font-bold rounded-md shadow-xl 
-                transition-all duration-200 pointer-events-none whitespace-nowrap z-[100] opacity-0 translate-y-1
-                ${showLabels ? 'group-hover:opacity-100 group-hover:translate-y-0' : ''}
-            `}>
-                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 rotate-45"></div>
-                {label}
-            </div>
-        </div>
-    );
+
 
     // Main Data Store
     const [allTeethData, setAllTeethData] = useState<Record<MeasurementMethod, { UL: ToothData[]; UR: ToothData[]; LL: ToothData[]; LR: ToothData[] }>>({
@@ -671,7 +671,7 @@ const App: React.FC = () => {
 
     const RedVerticalButton = () => (
         <button
-            onClick={currentQuadrant.startsWith('U') ? goDown : goUp}
+            onPointerDown={currentQuadrant.startsWith('U') ? goDown : goUp}
             className={`w-10 h-10 flex items-center justify-center bg-red-500 text-white rounded-md shadow-md hover:bg-red-600 active:bg-red-700 transition-all duration-300`}
             aria-label={currentQuadrant.startsWith('U') ? "Go Down" : "Go Up"}
         >
@@ -785,7 +785,7 @@ const App: React.FC = () => {
                     <div className="flex flex-col gap-2 z-20 shrink-0 w-10 self-center">
                         {isLower && showLeftControls && <RedVerticalButton />}
                         <button
-                            onClick={goLeft}
+                            onPointerDown={goLeft}
                             disabled={!showLeftControls}
                             className={`w-10 h-24 flex items-center justify-center bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700 active:bg-blue-800 transition-opacity duration-300 ${showLeftControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                             aria-label="Go Left"
@@ -888,7 +888,7 @@ const App: React.FC = () => {
                     <div className="flex flex-col gap-2 z-20 shrink-0 w-10 self-center">
                         {isLower && showRightControls && <RedVerticalButton />}
                         <button
-                            onClick={goRight}
+                            onPointerDown={goRight}
                             disabled={!showRightControls}
                             className={`w-10 h-24 flex items-center justify-center bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700 active:bg-blue-800 transition-opacity duration-300 ${showRightControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                             aria-label="Go Right"
@@ -914,22 +914,6 @@ const App: React.FC = () => {
                 {/* Patient Info Row & Execution Time */}
                 <div className="max-w-full mx-auto mb-1 px-1 flex justify-between items-center">
                     <div className="flex items-center gap-3 text-sm">
-                        {/* Examiner Icon Button (Requirement: Header Examiner UI) */}
-                        <WithTooltip label={`実施者: ${selectedExaminer.name}`}>
-                            <button 
-                                onClick={() => setIsExaminerModalOpen(true)}
-                                className={`
-                                    w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-xs shadow-md active:scale-95 transition-all border-2 border-white
-                                    ${selectedExaminer.color}
-                                `}
-                            >
-                                {(() => {
-                                    const parts = selectedExaminer.name.split(/\s+/);
-                                    return parts.length >= 2 ? parts[0][0] + parts[1][0] : selectedExaminer.name.substring(0, 2);
-                                })()}
-                            </button>
-                        </WithTooltip>
-
                         <div className="flex flex-col">
                             <span className="font-mono font-bold text-slate-400 text-xs leading-tight">000000001</span>
                             <div className="flex items-center gap-1.5">
@@ -946,7 +930,7 @@ const App: React.FC = () => {
                             <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200 shadow-sm">
                                 {/* Requirement 2: Set Now Button */}
                                 <button 
-                                    onClick={handleNowClick} 
+                                    onPointerDown={handleNowClick} 
                                     className="px-3 py-1 bg-white border border-slate-200 rounded-lg shadow-sm text-slate-700 text-[11px] font-bold hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 active:scale-95 transition-all"
                                 >
                                     今
@@ -970,7 +954,7 @@ const App: React.FC = () => {
 
                                 {/* Requirement 2: Quick Add Button */}
                                 <button 
-                                    onClick={handleAdd5Min} 
+                                    onPointerDown={handleAdd5Min} 
                                     className="px-2 py-1 bg-white border border-slate-200 rounded-lg shadow-sm text-slate-700 text-[11px] font-bold hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-600 active:scale-95 transition-all"
                                 >
                                     +5分
@@ -991,7 +975,7 @@ const App: React.FC = () => {
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                                     </svg>
                                 ) : (
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                     </svg>
                                 )}
@@ -1004,10 +988,10 @@ const App: React.FC = () => {
                             </div>
                         )}
 
-                        <WithTooltip label={isPreviewMode ? "閉じる" : "プレビュー"}>
+                        <WithTooltip label={isPreviewMode ? "閉じる" : "プレビュー"} showLabels={showLabels}>
                             <button
                                 className={`p-2 border rounded-lg shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center ${isPreviewMode ? 'bg-slate-800 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200'}`}
-                                onClick={() => {
+                                onPointerDown={() => {
                                     if (isPreviewMode) {
                                         setIsPreviewMode(false); setIsPisaPreview(false); setIsCompareMode(false); setCompareTargetDates([]); setZoomLevel(0.7); setPreviewContentHeight(0);
                                     } else {
@@ -1022,6 +1006,22 @@ const App: React.FC = () => {
                                 )}
                             </button>
                         </WithTooltip>
+
+                        {/* Examiner Icon Button (Moved to Right Side) */}
+                        <WithTooltip label={`実施者: ${selectedExaminer.name}`} showLabels={showLabels}>
+                            <button 
+                                onPointerDown={() => setIsExaminerModalOpen(true)}
+                                className={`
+                                    w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-xs shadow-md active:scale-95 transition-all border-2 border-white
+                                    ${selectedExaminer.color}
+                                `}
+                            >
+                                {(() => {
+                                    const parts = selectedExaminer.name.split(/\s+/);
+                                    return parts.length >= 2 ? parts[0][0] + parts[1][0] : selectedExaminer.name.substring(0, 2);
+                                })()}
+                            </button>
+                        </WithTooltip>
                     </div>
 
                 </div>
@@ -1031,7 +1031,7 @@ const App: React.FC = () => {
                     {/* Left Group */}
                     <div className="flex items-center gap-2 shrink-0 flex-1 justify-start">
                         <button
-                            onClick={() => setIsSettingsOpen(true)}
+                            onPointerDown={() => setIsSettingsOpen(true)}
                             className="p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center outline-none"
                             title="設定"
                         >
@@ -1049,7 +1049,7 @@ const App: React.FC = () => {
                     {/* Center Group */}
                     <div className="flex items-center gap-2 justify-center shrink-0">
                         <button
-                            onClick={() => !isPreviewMode && !isCompareMode && setIsCalendarOpen(true)}
+                            onPointerDown={() => !isPreviewMode && !isCompareMode && setIsCalendarOpen(true)}
                             disabled={isPreviewMode || isCompareMode}
                             className={`bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-700 shadow-inner flex items-center gap-2 hover:bg-white active:bg-slate-100 transition-colors h-9 ${isPreviewMode || isCompareMode ? 'opacity-70 pointer-events-none' : ''}`}
                         >
@@ -1059,9 +1059,9 @@ const App: React.FC = () => {
                             {selectedDate.replace(/-/g, '/')}
                         </button>
                         {!isPreviewMode && !isCompareMode && (
-                            <WithTooltip label="直近の履歴">
+                            <WithTooltip label="直近の履歴" showLabels={showLabels}>
                                 <button
-                                    onClick={handleLoadLatestHistory}
+                                    onPointerDown={handleLoadLatestHistory}
                                     className="p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-amber-600 hover:border-amber-200 hover:bg-amber-50 shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center gap-1"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
@@ -1077,22 +1077,22 @@ const App: React.FC = () => {
                     <div className="flex items-center gap-2 shrink-0 flex-1 justify-end">
                         {(isPreviewMode || isCompareMode) && (
                             <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-0.5 shadow-sm h-9">
-                                <button onClick={handleZoomOut} className="w-8 h-full flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded active:bg-slate-200 transition-colors font-bold text-lg leading-none pb-1" title="縮小">−</button>
+                                <button onPointerDown={handleZoomOut} className="w-8 h-full flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded active:bg-slate-200 transition-colors font-bold text-lg leading-none pb-1" title="縮小">−</button>
                                 <span className="text-xs font-bold w-12 text-center text-slate-700 select-none">{Math.round(zoomLevel * 100)}%</span>
-                                <button onClick={handleZoomIn} className="w-8 h-full flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded active:bg-slate-200 transition-colors font-bold text-lg leading-none pb-1" title="拡大">+</button>
+                                <button onPointerDown={handleZoomIn} className="w-8 h-full flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded active:bg-slate-200 transition-colors font-bold text-lg leading-none pb-1" title="拡大">+</button>
                             </div>
                         )}
                         {isPreviewMode && measurementMethod === '6-point' && (
                             <div className="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 shadow-inner h-9">
-                                <button onClick={() => { setIsPisaPreview(false); }} className={`px-3 h-full rounded-md text-xs font-bold transition-all ${!isPisaPreview ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>チャート</button>
-                                <button onClick={() => { setIsPisaPreview(true); }} className={`px-3 h-full rounded-md text-xs font-bold transition-all ${isPisaPreview ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-500'}`}>PISA</button>
+                                <button onPointerDown={() => { setIsPisaPreview(false); }} className={`px-3 h-full rounded-md text-xs font-bold transition-all ${!isPisaPreview ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>チャート</button>
+                                <button onPointerDown={() => { setIsPisaPreview(true); }} className={`px-3 h-full rounded-md text-xs font-bold transition-all ${isPisaPreview ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-500'}`}>PISA</button>
                             </div>
                         )}
                         {isPreviewMode && (
-                            <WithTooltip label={isCompareMode ? "比較終了" : "比較モード"}>
+                            <WithTooltip label={isCompareMode ? "比較終了" : "比較モード"} showLabels={showLabels}>
                                 <button
                                     className={`p-2 border rounded-lg shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center ${isCompareMode ? 'bg-indigo-600 text-white border-indigo-700' : 'bg-white text-slate-600 border-slate-200'}`}
-                                    onClick={handleCompareClick}
+                                    onPointerDown={handleCompareClick}
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 8.25V6a2.25 2.25 0 0 0-2.25-2.25H6A2.25 2.25 0 0 0 3.75 6v8.25A2.25 2.25 0 0 0 6 16.5h2.25m8.25-8.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-7.5A2.25 2.25 0 0 1 8.25 18v-1.5m8.25-8.25h-6a2.25 2.25 0 0 0-2.25 2.25v6" /></svg>
                                 </button>
@@ -1101,14 +1101,14 @@ const App: React.FC = () => {
                         {/* Bulk Status (Edit Mode only) */}
                         {!isPreviewMode && !isCompareMode && (
                             <div className="flex items-center gap-1">
-                                <WithTooltip label="全顎欠損">
-                                    <button onClick={() => handleBulkStatusChange('all_missing')} className="h-9 px-2 text-[10px] font-bold bg-white text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 shadow-sm transition-colors">欠損</button>
+                                <WithTooltip label="全顎欠損" showLabels={showLabels}>
+                                    <button onPointerDown={() => handleBulkStatusChange('all_missing')} className="h-9 px-2 text-[10px] font-bold bg-white text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 shadow-sm transition-colors">欠損</button>
                                 </WithTooltip>
-                                <WithTooltip label="全顎乳歯">
-                                    <button onClick={() => handleBulkStatusChange('all_primary')} className="h-9 px-2 text-[10px] font-bold bg-white text-green-600 border border-slate-200 rounded-lg hover:bg-green-50 shadow-sm transition-colors">乳歯</button>
+                                <WithTooltip label="全顎乳歯" showLabels={showLabels}>
+                                    <button onPointerDown={() => handleBulkStatusChange('all_primary')} className="h-9 px-2 text-[10px] font-bold bg-white text-green-600 border border-slate-200 rounded-lg hover:bg-green-50 shadow-sm transition-colors">乳歯</button>
                                 </WithTooltip>
-                                <WithTooltip label="全て永久歯に戻す">
-                                    <button onClick={() => handleBulkStatusChange('reset')} className="h-9 px-2 text-[10px] font-bold bg-white text-blue-600 border border-slate-200 rounded-lg hover:bg-blue-50 shadow-sm transition-colors">戻す</button>
+                                <WithTooltip label="全て永久歯に戻す" showLabels={showLabels}>
+                                    <button onPointerDown={() => handleBulkStatusChange('reset')} className="h-9 px-2 text-[10px] font-bold bg-white text-blue-600 border border-slate-200 rounded-lg hover:bg-blue-50 shadow-sm transition-colors">戻す</button>
                                 </WithTooltip>
                             </div>
                         )}
@@ -1116,16 +1116,16 @@ const App: React.FC = () => {
 
 
                         {!isPreviewMode && (
-                            <WithTooltip label="保存">
-                                <button className="p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-blue-600 h-9 flex items-center justify-center shadow-sm active:scale-95 transition-all" onClick={() => handleSave()}>
+                            <WithTooltip label="保存" showLabels={showLabels}>
+                                <button className="p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-blue-600 h-9 flex items-center justify-center shadow-sm active:scale-95 transition-all" onPointerDown={() => handleSave()}>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" /></svg>
                                 </button>
                             </WithTooltip>
                         )}
 
                         {!isPreviewMode && (
-                            <WithTooltip label="データ削除">
-                                <button className="p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-red-600 h-9 flex items-center justify-center shadow-sm active:scale-95 transition-all" onClick={() => setIsDeleteModalOpen(true)}>
+                            <WithTooltip label="データ削除" showLabels={showLabels}>
+                                <button className="p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-red-600 h-9 flex items-center justify-center shadow-sm active:scale-95 transition-all" onPointerDown={() => setIsDeleteModalOpen(true)}>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
                                 </button>
                             </WithTooltip>
@@ -1158,13 +1158,13 @@ const App: React.FC = () => {
                         </div>
                         <div className="flex items-center justify-end gap-3 px-5 py-4 bg-slate-50 border-t border-slate-100">
                             <button
-                                onClick={() => setIsSaveConfirmModalOpen(false)}
+                                onPointerDown={() => setIsSaveConfirmModalOpen(false)}
                                 className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
                             >
                                 いいえ
                             </button>
                             <button
-                                onClick={handleSaveAndPreview}
+                                onPointerDown={handleSaveAndPreview}
                                 className="px-4 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-all active:scale-95"
                             >
                                 はい
@@ -1195,13 +1195,13 @@ const App: React.FC = () => {
                         </div>
                         <div className="flex items-center justify-end gap-3 px-5 py-4 bg-slate-50 border-t border-slate-100">
                             <button
-                                onClick={() => setIsDeleteModalOpen(false)}
+                                onPointerDown={() => setIsDeleteModalOpen(false)}
                                 className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
                             >
                                 キャンセル
                             </button>
                             <button
-                                onClick={handleConfirmDelete}
+                                onPointerDown={handleConfirmDelete}
                                 className="px-4 py-2 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-lg shadow-sm transition-all active:scale-95"
                             >
                                 リセット実行
@@ -1217,7 +1217,7 @@ const App: React.FC = () => {
                     <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-200 animate-fade-in-up flex flex-col max-h-[80vh]">
                         <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center shrink-0">
                             <h3 className="font-bold text-lg text-slate-800">比較するデータを選択</h3>
-                            <button onClick={() => setIsCompareListOpen(false)} className="text-slate-500 hover:text-slate-800">
+                            <button onPointerDown={() => setIsCompareListOpen(false)} className="text-slate-500 hover:text-slate-800">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
@@ -1235,7 +1235,7 @@ const App: React.FC = () => {
                                         return (
                                             <button
                                                 key={date}
-                                                onClick={() => !isCurrent && handleCompareDateToggle(date)}
+                                                onPointerDown={() => !isCurrent && handleCompareDateToggle(date)}
                                                 disabled={isCurrent}
                                                 className={`
                                             w-full text-left px-4 py-3 rounded-lg flex items-center justify-between border transition-all
@@ -1273,13 +1273,13 @@ const App: React.FC = () => {
                         {/* Footer Actions */}
                         <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
                             <button
-                                onClick={() => setIsCompareListOpen(false)}
+                                onPointerDown={() => setIsCompareListOpen(false)}
                                 className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
                             >
                                 キャンセル
                             </button>
                             <button
-                                onClick={handleConfirmComparison}
+                                onPointerDown={handleConfirmComparison}
                                 disabled={compareTargetDates.length === 0}
                                 className={`px-4 py-2 text-sm font-bold text-white rounded-lg shadow-sm transition-all flex items-center gap-2
                             ${compareTargetDates.length === 0

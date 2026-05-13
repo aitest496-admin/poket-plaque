@@ -172,9 +172,9 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
           </div>
           {/* Mobility (Upper) */}
           <div className={`${mobilityRowHeight} flex items-center justify-between px-1 bg-[#fafafa] border-b border-[#ccc]`}>
-            <button className={mobilityBtnClass} onClick={() => handleMobilityChange(-1)}>-</button>
+            <button className={mobilityBtnClass} onPointerDown={() => handleMobilityChange(-1)}>-</button>
             <span className={`${mobilityTextSize} font-bold flex-1 text-center`}>{data.mobility}</span>
-            <button className={mobilityBtnClass} onClick={() => handleMobilityChange(1)}>+</button>
+            <button className={mobilityBtnClass} onPointerDown={() => handleMobilityChange(1)}>+</button>
           </div>
           {/* Measurements (Upper Buccal) */}
           {/* Pus -> Bleeding -> Chart (15..1) | Inverted=false puts 1 at bottom */}
@@ -191,7 +191,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
         {/* === TOOTH ID (上顎) === */}
         <div
           className={`font-bold ${toothIdHeight} ${toothIdTextSize} flex items-center justify-center border-b border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
-          onClick={handleStatusChange}
+          onPointerDown={handleStatusChange}
           title="上顎: クリックで状態切替 (永久歯/欠損/乳歯)"
         >
           {formatToothId(data.id, data.isPrimary)}
@@ -199,7 +199,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
         {/* === TOOTH ID (下顎) === */}
         <div
           className={`font-bold ${toothIdHeight} ${toothIdTextSize} flex items-center justify-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(lowerData)}`}
-          onClick={() => {
+          onPointerDown={() => {
             let nextState = { isMissing: false, isPrimary: false };
             if (lowerData.id >= 6) {
               if (lowerData.isMissing) {
@@ -239,9 +239,9 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
 
           {/* Mobility (Lower) */}
           <div className={`${mobilityRowHeight} flex items-center justify-between px-1 bg-[#fafafa] border-t border-[#ccc]`}>
-            <button className={mobilityBtnClass} onClick={() => handleLowerMobilityChange(-1)}>-</button>
+            <button className={mobilityBtnClass} onPointerDown={() => handleLowerMobilityChange(-1)}>-</button>
             <span className={`${mobilityTextSize} font-bold flex-1 text-center`}>{lowerData.mobility}</span>
-            <button className={mobilityBtnClass} onClick={() => handleLowerMobilityChange(1)}>+</button>
+            <button className={mobilityBtnClass} onPointerDown={() => handleLowerMobilityChange(1)}>+</button>
           </div>
           {/* Plaque Diagram (Lower) */}
           <div className="border-t border-[#ccc] w-full">
@@ -280,9 +280,9 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
 
             {/* 2. Mobility (Next to Pus) */}
             <div className={`${mobilityRowHeight} flex items-center justify-between px-1 bg-[#fafafa] border-b border-[#ccc]`}>
-              <button className={mobilityBtnClass} onClick={() => handleMobilityChange(-1)}>-</button>
+              <button className={mobilityBtnClass} onPointerDown={() => handleMobilityChange(-1)}>-</button>
               <span className={`${mobilityTextSize} font-bold flex-1 text-center`}>{data.mobility}</span>
-              <button className={mobilityBtnClass} onClick={() => handleMobilityChange(1)}>+</button>
+              <button className={mobilityBtnClass} onPointerDown={() => handleMobilityChange(1)}>+</button>
             </div>
 
             {/* 3. Pus (Buccal) - 2 Points */}
@@ -303,7 +303,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
           {/* TOOTH ID */}
           <div
             className={`font-bold ${toothIdHeight} ${toothIdTextSize} flex items-center justify-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
-            onClick={handleStatusChange}
+            onPointerDown={handleStatusChange}
             title="クリックで状態切替 (永久歯/欠損/乳歯)"
           >
             {formatToothId(data.id, data.isPrimary)}
@@ -354,7 +354,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
           {/* TOOTH ID */}
           <div
             className={`font-bold ${toothIdHeight} ${toothIdTextSize} flex items-center justify-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
-            onClick={handleStatusChange}
+            onPointerDown={handleStatusChange}
             title="クリックで状態切替 (永久歯/欠損/乳歯)"
           >
             {formatToothId(data.id, data.isPrimary)}
@@ -379,9 +379,9 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
 
             {/* 4. Mobility */}
             <div className={`${mobilityRowHeight} flex items-center justify-between px-1 bg-[#fafafa] border-t border-[#ccc]`}>
-              <button className={mobilityBtnClass} onClick={() => handleMobilityChange(-1)}>-</button>
+              <button className={mobilityBtnClass} onPointerDown={() => handleMobilityChange(-1)}>-</button>
               <span className={`${mobilityTextSize} font-bold flex-1 text-center`}>{data.mobility}</span>
-              <button className={mobilityBtnClass} onClick={() => handleMobilityChange(1)}>+</button>
+              <button className={mobilityBtnClass} onPointerDown={() => handleMobilityChange(1)}>+</button>
             </div>
 
             {/* 5. Plaque */}
@@ -420,12 +420,12 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
           <div className={`${mobilityRowHeight} flex items-center justify-between px-1 bg-[#fafafa] border-b border-[#ccc]`}>
             <button
               className={mobilityBtnClass}
-              onClick={() => handleMobilityChange(-1)}
+              onPointerDown={() => handleMobilityChange(-1)}
             >-</button>
             <span className={`${mobilityTextSize} font-bold flex-1 text-center`}>{data.mobility}</span>
             <button
               className={mobilityBtnClass}
-              onClick={() => handleMobilityChange(1)}
+              onPointerDown={() => handleMobilityChange(1)}
             >+</button>
           </div>
         </>
@@ -461,12 +461,12 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
           <div className={`${mobilityRowHeight} flex items-center justify-between px-1 bg-[#fafafa] border-t border-[#ccc]`}>
             <button
               className={mobilityBtnClass}
-              onClick={() => handleMobilityChange(-1)}
+              onPointerDown={() => handleMobilityChange(-1)}
             >-</button>
             <span className={`${mobilityTextSize} font-bold flex-1 text-center`}>{data.mobility}</span>
             <button
               className={mobilityBtnClass}
-              onClick={() => handleMobilityChange(1)}
+              onPointerDown={() => handleMobilityChange(1)}
             >+</button>
           </div>
           <div className={`border-t border-[#ccc] w-full ${isLarge ? 'h-[70px]' : ''}`}>
@@ -522,7 +522,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
       {/* ================= TOOTH ID ================= */}
       <div
         className={`font-bold ${toothIdHeight} ${toothIdTextSize} flex items-center justify-center border-y border-[#999] cursor-pointer hover:opacity-80 transition-colors ${getIdClass(data)}`}
-        onClick={handleStatusChange}
+        onPointerDown={handleStatusChange}
         title="クリックで状態切替 (永久歯/欠損/乳歯)"
       >
         {formatToothId(data.id, data.isPrimary)}

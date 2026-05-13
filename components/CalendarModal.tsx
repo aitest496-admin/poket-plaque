@@ -74,7 +74,7 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, onSelect
       <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-200 animate-fade-in-up">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50">
-          <button onClick={handlePrevMonth} className="p-1 hover:bg-slate-200 rounded text-slate-600">
+          <button onPointerDown={handlePrevMonth} className="p-1 hover:bg-slate-200 rounded text-slate-600">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
@@ -82,7 +82,7 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, onSelect
           <div className="font-bold text-lg text-slate-800">
             {year}年 {month + 1}月
           </div>
-          <button onClick={handleNextMonth} className="p-1 hover:bg-slate-200 rounded text-slate-600">
+          <button onPointerDown={handleNextMonth} className="p-1 hover:bg-slate-200 rounded text-slate-600">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>
@@ -116,7 +116,7 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, onSelect
               return (
                 <button
                   key={day}
-                  onClick={() => handleDateClick(day)}
+                  onPointerDown={() => handleDateClick(day)}
                   className={`
                     aspect-square rounded-full flex flex-col items-center justify-center relative transition-all text-sm font-medium
                     ${isSelected 
@@ -145,13 +145,13 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, onSelect
              </div>
              <div className="flex gap-2">
                 <button 
-                    onClick={handleToday}
+                    onPointerDown={handleToday}
                     className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-white border border-slate-300 rounded hover:bg-slate-50"
                 >
                     今日へ
                 </button>
                 <button 
-                    onClick={onClose}
+                    onPointerDown={onClose}
                     className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded"
                 >
                     閉じる
