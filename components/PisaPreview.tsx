@@ -97,9 +97,15 @@ const PisaPreview: React.FC<PisaPreviewProps> = ({ data, date, method, examiner 
                         {result.totalPISA.toFixed(1)}
                     </div>
                     <div className="text-xs text-slate-500 mt-0.5">mm²</div>
-                    <div className={`mt-2 px-3 py-0.5 rounded-full text-xs font-bold ${sev.bg} ${sev.color} border ${sev.border}`}>
-                        {sev.icon} {sev.label}
-                    </div>
+                    {result.totalUnmeasuredSites === result.totalBOPSites ? (
+                        <div className="mt-2 px-3 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                            評価不可
+                        </div>
+                    ) : (
+                        <div className={`mt-2 px-3 py-0.5 rounded-full text-xs font-bold ${sev.bg} ${sev.color} border ${sev.border}`}>
+                            {sev.icon} {sev.label}
+                        </div>
+                    )}
                 </div>
 
                 {/* PESA / BOP Summary */}

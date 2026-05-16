@@ -15,8 +15,8 @@ const PocketDepthChart: React.FC<PocketDepthChartProps> = ({ values, onChange, i
     ? displayPoints
     : (singlePoint ? [1] : [0, 1, 2]);
 
-  // Fixed 12 levels: 1 to 12.
-  const depthLevels = Array.from({ length: 12 }, (_, i) => i + 1);
+  // Tap targets: 1 to 9mm. 10mm+ can be typed in the input directly.
+  const depthLevels = Array.from({ length: 9 }, (_, i) => i + 1);
 
   const getBgClass = (level: number) => {
     if (level >= 10) return 'bg-[#ff4d4d] text-white'; // Red
@@ -46,14 +46,16 @@ const PocketDepthChart: React.FC<PocketDepthChartProps> = ({ values, onChange, i
           key={pointIndex}
           className={`flex flex-1 mx-[1px] ${isInverted ? 'flex-col' : 'flex-col-reverse'}`}
         >
-          {/* Input for manual entry (Placed closest to Tooth ID) */}
+          {/* Input for manual entry (Placed closest to Tooth ID). 10mm+ can be typed here. */}
           <input
             type="text"
             inputMode="numeric"
             pattern="[0-9]*"
+            placeholder="-"
+            title="数値を直接入力（10mm以上も可）"
             className={`
                ${inputHeight} border border-[#ccc] mb-[0.5px] w-full 
-               text-center ${inputTextSize} font-bold bg-slate-50 
+               text-center ${inputTextSize} font-bold bg-slate-50 placeholder:text-slate-300
                focus:bg-blue-600 focus:text-white focus:outline-none focus:border-blue-700 rounded-none p-0
             `}
             value={values[pointIndex] ?? ''}

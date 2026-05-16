@@ -162,7 +162,7 @@ const SideLabels = ({ jaw, method }: { jaw: 'upper' | 'lower', method: Measureme
     const hMobility = 28;   // Mobility row h-[28px]
     const hPus = 26;        // ThreePointToggle h-[26px]
     const hBleeding = 26;   // ThreePointToggle h-[26px]
-    const hPD = 313;        // PocketDepthChart total: input(42.5) + 12cells(12×22.5)
+    const hPD = 245;        // PocketDepthChart total: input(42.5) + 9cells(9×22.5)
     const hID = 52;         // Tooth ID h-[52px]
 
     // Simple label row with exact height
@@ -837,7 +837,7 @@ const App: React.FC = () => {
 
         // Default Editor View
         return (
-            <div className="w-full h-full flex items-start justify-center gap-1 relative max-w-7xl mx-auto print:hidden">
+            <div className="w-full h-full flex items-start justify-center relative print:hidden">
                 {/* LEFT CONTROLS COLUMN */}
                 {measurementMethod !== '1-point' && (
                     <div className="flex flex-col gap-2 z-20 shrink-0 w-10 self-center">
@@ -860,7 +860,7 @@ const App: React.FC = () => {
                     {measurementMethod === '1-point' ? (
                         <div className="w-full min-h-full overflow-auto p-2 flex items-start justify-center touch-none select-none">
                             <div className="flex justify-center gap-1">
-                                <div className="flex gap-[1px] bg-white p-1 rounded border border-slate-300 shadow-sm">
+                                <div className="flex gap-[1px] bg-white p-0 rounded border border-slate-300 shadow-sm">
                                     {currentTeethData.UR.map((tooth, index) => (
                                         <Tooth
                                             key={tooth.id}
@@ -874,7 +874,7 @@ const App: React.FC = () => {
                                     ))}
                                 </div>
                                 <div className="w-2 shrink-0"></div>
-                                <div className="flex gap-[1px] bg-white p-1 rounded border border-slate-300 shadow-sm">
+                                <div className="flex gap-[1px] bg-white p-0 rounded border border-slate-300 shadow-sm">
                                     {currentTeethData.UL.map((tooth, index) => (
                                         <Tooth
                                             key={tooth.id}
@@ -895,7 +895,7 @@ const App: React.FC = () => {
                             style={{ transform: getTranslate() }}
                         >
                             <div className="w-1/2 h-1/2 flex items-center justify-start bg-slate-100 p-0.5">
-                                <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col items-center overflow-auto">
+                                <div className="bg-white p-0 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col items-center overflow-auto">
                                     <div className="flex w-full h-full gap-[1px] items-start">
                                         {currentTeethData.UR.map(tooth => (
                                             <Tooth key={tooth.id} data={tooth} onUpdate={(t) => handleToothUpdate('UR', t)} jaw="upper" method={measurementMethod} />
@@ -906,7 +906,7 @@ const App: React.FC = () => {
                             </div>
 
                             <div className="w-1/2 h-1/2 flex items-center justify-end bg-slate-100 p-0.5">
-                                <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col items-center overflow-auto">
+                                <div className="bg-white p-0 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col items-center overflow-auto">
                                     <div className="flex w-full h-full gap-[1px] items-start">
                                         <SideLabels jaw="upper" method={measurementMethod} />
                                         {currentTeethData.UL.map(tooth => (
@@ -917,7 +917,7 @@ const App: React.FC = () => {
                             </div>
 
                             <div className="w-1/2 h-1/2 flex items-center justify-start bg-slate-100 p-0.5">
-                                <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col items-center overflow-auto">
+                                <div className="bg-white p-0 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col items-center overflow-auto">
                                     <div className="flex w-full h-full gap-[1px] items-start">
                                         {currentTeethData.LR.map(tooth => (
                                             <Tooth key={tooth.id} data={tooth} onUpdate={(t) => handleToothUpdate('LR', t)} jaw="lower" method={measurementMethod} />
@@ -928,7 +928,7 @@ const App: React.FC = () => {
                             </div>
 
                             <div className="w-1/2 h-1/2 flex items-center justify-end bg-slate-100 p-0.5">
-                                <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col items-center overflow-auto">
+                                <div className="bg-white p-0 rounded-lg shadow-sm border border-slate-200 w-full h-full flex flex-col items-center overflow-auto">
                                     <div className="flex w-full h-full gap-[1px] items-start">
                                         <SideLabels jaw="lower" method={measurementMethod} />
                                         {currentTeethData.LL.map(tooth => (
