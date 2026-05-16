@@ -15,8 +15,8 @@ const PocketDepthChart: React.FC<PocketDepthChartProps> = ({ values, onChange, i
     ? displayPoints
     : (singlePoint ? [1] : [0, 1, 2]);
 
-  // Fixed 9 levels: 1 to 9.
-  const depthLevels = Array.from({ length: 9 }, (_, i) => i + 1);
+  // Fixed 12 levels: 1 to 12.
+  const depthLevels = Array.from({ length: 12 }, (_, i) => i + 1);
 
   const getBgClass = (level: number) => {
     if (level >= 10) return 'bg-[#ff4d4d] text-white'; // Red

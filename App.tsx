@@ -162,7 +162,7 @@ const SideLabels = ({ jaw, method }: { jaw: 'upper' | 'lower', method: Measureme
     const hMobility = 28;   // Mobility row h-[28px]
     const hPus = 26;        // ThreePointToggle h-[26px]
     const hBleeding = 26;   // ThreePointToggle h-[26px]
-    const hPD = 245;        // PocketDepthChart total: input(42+0.5) + 9cells(9×22.5)
+    const hPD = 313;        // PocketDepthChart total: input(42.5) + 12cells(12×22.5)
     const hID = 52;         // Tooth ID h-[52px]
 
     // Simple label row with exact height
@@ -306,7 +306,7 @@ const App: React.FC = () => {
 
     // Multiple Comparison States
     const [compareTargetDates, setCompareTargetDates] = useState<string[]>([]);
-    const [comparisonData, setComparisonData] = useState<Record<string, any>>({});
+    const [comparisonData, setComparisonData] = useState<Record<string, any>>({}); // Keep any for now or use Record<string, ChartRecord>
 
     const [zoomLevel, setZoomLevel] = useState(0.7); // Default zoom level for preview
 
@@ -327,6 +327,8 @@ const App: React.FC = () => {
 
     // Dirty State (Unsaved Changes)
     const [isDirty, setIsDirty] = useState(false);
+    const [isUnsavedModalOpen, setIsUnsavedModalOpen] = useState(false);
+    const [pendingDate, setPendingDate] = useState<string | null>(null);
 
     // Toast State
     const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
@@ -391,6 +393,24 @@ const App: React.FC = () => {
                     setStartTime(formatTime(now));
                     setEndTime(formatTime(new Date(now.getTime() + 15 * 60000)));
                 }
+
+                // Restore examiner
+                if (record.examinerId) {
+                    const found = mockExaminers.find(e => e.id === record.examinerId);
+                    if (found) {
+                        setSelectedExaminer(found);
+                    } else if (record.examinerName) {
+                        // Fallback for custom/deleted examiners
+                        setSelectedExaminer({
+                            id: record.examinerId,
+                            name: record.examinerName,
+                            color: record.examinerColor || 'bg-slate-500'
+                        });
+                    }
+                } else {
+                    setSelectedExaminer(mockExaminers[0]);
+                }
+
                 setToast({ message: `${date.replace(/-/g, '/')} のデータを読み込みました`, type: 'info' });
             } else {
                 // If no data exists for this date, reset to empty
@@ -403,6 +423,7 @@ const App: React.FC = () => {
                 const now = new Date();
                 setStartTime(formatTime(now));
                 setEndTime(formatTime(new Date(now.getTime() + 15 * 60000)));
+                setSelectedExaminer(mockExaminers[0]);
             }
             setIsDirty(false); // Reset dirty state on load
         } catch (error) {
@@ -419,7 +440,7 @@ const App: React.FC = () => {
             try {
                 const record = await DentalDB.getChart(date);
                 if (record) {
-                    newData[date] = record.data;
+                    newData[date] = record;
                     loadedCount++;
                 }
             } catch (e) {
@@ -439,7 +460,10 @@ const App: React.FC = () => {
                 data: allTeethData,
                 updatedAt: Date.now(),
                 startTime,
-                endTime
+                endTime,
+                examinerId: selectedExaminer.id,
+                examinerName: selectedExaminer.name,
+                examinerColor: selectedExaminer.color
             });
             setToast({ message: "保存しました", type: 'success' });
             await updateMarkedDates(); // Update calendar markers
@@ -461,8 +485,14 @@ const App: React.FC = () => {
     };
 
     const handleSelectDate = (date: string) => {
-        setSelectedDate(date);
-        // useEffect will handle loading
+        if (date === selectedDate) return;
+        
+        if (isDirty) {
+            setPendingDate(date);
+            setIsUnsavedModalOpen(true);
+        } else {
+            setSelectedDate(date);
+        }
     };
 
     // Initial load and when date changes
@@ -548,6 +578,25 @@ const App: React.FC = () => {
         }));
         setIsDeleteModalOpen(false);
         setIsDirty(true); // Resetting data is also a change
+    };
+
+    const handleDeleteSavedData = async () => {
+        try {
+            await DentalDB.deleteChart(selectedDate);
+            await updateMarkedDates();
+            // After deleting from DB, also reset current view
+            setAllTeethData({
+                '1-point': generateFullMouth(),
+                '4-point': generateFullMouth(),
+                '6-point': generateFullMouth(),
+            });
+            setIsDeleteModalOpen(false);
+            setIsDirty(false);
+            setToast({ message: "保存済みデータを削除しました", type: 'success' });
+        } catch (e) {
+            console.error("Failed to delete saved data", e);
+            setToast({ message: "削除に失敗しました", type: 'error' });
+        }
     };
 
     // Load latest history data (including tooth status)
@@ -722,23 +771,30 @@ const App: React.FC = () => {
                                         data={allTeethData['6-point']}
                                         date={selectedDate}
                                         method={'6-point'}
+                                        examiner={selectedExaminer}
                                     />
                                 ) : (
                                     <DentalChartPrintView
                                         data={allTeethData[measurementMethod]}
                                         date={selectedDate}
                                         method={measurementMethod}
+                                        examiner={selectedExaminer}
                                     />
                                 )}
                             </div>
 
                             {/* Comparison Charts */}
                             {isCompareMode && compareTargetDates.map(date => {
-                                const dataForDate = comparisonData[date];
-                                if (!dataForDate) return null;
+                                // record contains data and examiner info
+                                const record = comparisonData[date];
+                                if (!record) return null;
 
-                                // dataForDate contains all methods. Use current method for view.
-                                const viewData = dataForDate[measurementMethod];
+                                const viewData = record.data[measurementMethod];
+                                const recordExaminer = record.examinerId ? {
+                                    id: record.examinerId,
+                                    name: record.examinerName || '',
+                                    color: record.examinerColor || 'bg-slate-500'
+                                } : undefined;
 
                                 return (
                                     <div key={date} className="w-full relative animate-fade-in-up">
@@ -756,15 +812,17 @@ const App: React.FC = () => {
                                         <div className="bg-white shadow-xl border-[6px] border-indigo-200 print:shadow-none print:border-2 print:border-slate-300">
                                             {isPisaPreview ? (
                                                 <PisaPreview
-                                                    data={dataForDate['6-point']}
+                                                    data={record.data['6-point']}
                                                     date={date}
                                                     method={'6-point'}
+                                                    examiner={recordExaminer}
                                                 />
                                             ) : (
                                                 <DentalChartPrintView
                                                     data={viewData}
                                                     date={date}
                                                     method={measurementMethod}
+                                                    examiner={recordExaminer}
                                                 />
                                             )}
                                         </div>
@@ -1109,9 +1167,9 @@ const App: React.FC = () => {
                         )}
 
                         {!isPreviewMode && (
-                            <WithTooltip label="データ削除" showLabels={showLabels}>
+                            <WithTooltip label="リセット / 削除" showLabels={showLabels}>
                                 <button className="p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-red-600 h-9 flex items-center justify-center shadow-sm active:scale-95 transition-all" onPointerDown={() => setIsDeleteModalOpen(true)}>
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
                                 </button>
                             </WithTooltip>
                         )}
@@ -1159,7 +1217,7 @@ const App: React.FC = () => {
                 </div>
             )}
 
-            {/* Delete Confirmation Modal (Hidden on print) */}
+            {/* Reset or Delete Confirmation Modal */}
             {isDeleteModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-[2px] print:hidden">
                     <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-200">
@@ -1170,26 +1228,95 @@ const App: React.FC = () => {
                                         <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                     </svg>
                                 </div>
-                                <h3 className="font-bold text-lg text-slate-800">データをリセット</h3>
+                                <h3 className="font-bold text-lg text-slate-800">リセット / 削除</h3>
                             </div>
-                            <p className="text-slate-600 text-sm leading-relaxed">
-                                現在編集中のデータをリセットしますか？
-                                <br />
-                                <span className="text-xs text-slate-400 mt-2 block">※保存されていない変更は失われます。</span>
+                            <p className="text-slate-600 text-sm leading-relaxed mb-4">
+                                実行する操作を選択してください。
                             </p>
+                            
+                            <div className="flex flex-col gap-2">
+                                <button 
+                                    onPointerDown={handleConfirmDelete}
+                                    className="w-full flex flex-col items-start p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
+                                >
+                                    <span className="text-sm font-bold text-slate-800">編集中データのリセット</span>
+                                    <span className="text-xs text-slate-500">入力値を空にします。保存済みデータは削除されません。</span>
+                                </button>
+                                
+                                {markedDates.includes(selectedDate) && (
+                                    <button 
+                                        onPointerDown={handleDeleteSavedData}
+                                        className="w-full flex flex-col items-start p-3 rounded-lg border border-red-100 bg-red-50/30 hover:bg-red-50 transition-colors"
+                                    >
+                                        <span className="text-sm font-bold text-red-600">保存済みデータの削除</span>
+                                        <span className="text-xs text-red-400">この日付の保存データを完全に削除します。</span>
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                        <div className="flex items-center justify-end gap-3 px-5 py-4 bg-slate-50 border-t border-slate-100">
+                        <div className="flex items-center justify-end px-5 py-4 bg-slate-50 border-t border-slate-100">
                             <button
                                 onPointerDown={() => setIsDeleteModalOpen(false)}
                                 className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
                             >
                                 キャンセル
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Unsaved Changes Confirmation Modal */}
+            {isUnsavedModalOpen && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-[2px] print:hidden">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-200 animate-fade-in-up">
+                        <div className="p-5">
+                            <div className="flex items-center gap-3 mb-3 text-amber-500">
+                                <div className="p-2 bg-amber-100 rounded-full">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                                    </svg>
+                                </div>
+                                <h3 className="font-bold text-lg text-slate-800">未保存の変更</h3>
+                            </div>
+                            <p className="text-slate-600 text-sm leading-relaxed font-bold">
+                                変更が保存されていません。移動する前に保存しますか？
+                            </p>
+                        </div>
+                        <div className="flex flex-col gap-2 p-5 bg-slate-50 border-t border-slate-100">
                             <button
-                                onPointerDown={handleConfirmDelete}
-                                className="px-4 py-2 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-lg shadow-sm transition-all active:scale-95"
+                                onPointerDown={async () => {
+                                    const success = await handleSave();
+                                    if (success && pendingDate) {
+                                        setSelectedDate(pendingDate);
+                                        setIsUnsavedModalOpen(false);
+                                        setPendingDate(null);
+                                    }
+                                }}
+                                className="w-full py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-all active:scale-95"
                             >
-                                リセット実行
+                                保存して移動
+                            </button>
+                            <button
+                                onPointerDown={() => {
+                                    if (pendingDate) {
+                                        setSelectedDate(pendingDate);
+                                        setIsUnsavedModalOpen(false);
+                                        setPendingDate(null);
+                                    }
+                                }}
+                                className="w-full py-2.5 text-sm font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-all active:scale-95"
+                            >
+                                保存せず移動
+                            </button>
+                            <button
+                                onPointerDown={() => {
+                                    setIsUnsavedModalOpen(false);
+                                    setPendingDate(null);
+                                }}
+                                className="w-full py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
+                            >
+                                キャンセル
                             </button>
                         </div>
                     </div>

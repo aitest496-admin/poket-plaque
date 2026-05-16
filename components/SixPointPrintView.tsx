@@ -10,6 +10,7 @@ interface DentalChartPrintViewProps {
   };
   date: string;
   method: MeasurementMethod;
+  examiner?: { id: string; name: string; color: string };
 }
 
 const formatToothId = (id: number, isPrimary?: boolean) => {
@@ -122,7 +123,7 @@ const MeasurementCells: React.FC<{ tooth: ToothData, side: 'buccal' | 'lingual',
   );
 };
 
-const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date, method }) => {
+const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date, method, examiner }) => {
   const upperTeeth = [...data.UR, ...data.UL];
   const lowerTeeth = [...data.LR, ...data.LL];
 
@@ -222,6 +223,7 @@ const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date,
       <div className="flex justify-between items-end mb-4 border-b-2 border-slate-800 pb-2">
         <h1 className="text-xl font-bold">歯周精密検査表 ({method === '1-point' ? '1点法' : method === '4-point' ? '4点法' : '6点法'})</h1>
         <div className="flex gap-8 text-sm font-bold">
+            {examiner && <div>実施者: {examiner.name}</div>}
             <div>検査日 {date.replace(/-/g, '.')}</div>
             <div>PCR {stats.pcr}%</div>
         </div>

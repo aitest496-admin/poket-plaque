@@ -73,6 +73,7 @@ export interface ToothPISAResult {
     bopTotal: number;       // 全サイト数
     bopRatio: number;       // BOP陽性率 (0-1)
     pisa: number;           // PISA = PESA × bopRatio (mm²)
+    unmeasuredSites: number;// 未入力サイト数
 }
 
 /** 全口腔PISA計算結果 */
@@ -86,6 +87,7 @@ export interface FullMouthPISAResult {
     teethResults: Record<Quadrant, ToothPISAResult[]>;  // 歯ごとの結果
     severity: 'healthy' | 'mild' | 'moderate' | 'severe'; // 重症度
     presentTeethCount: number;                           // 残存歯数
+    totalUnmeasuredSites: number;                        // 全未入力サイト数
 }
 
 /** FDI歯式番号を算出 (象限番号 + 歯番号) */
@@ -145,6 +147,9 @@ export function calculateToothPISA(tooth: ToothData, quadrant: Quadrant): ToothP
     // PISA計算
     const pisa = pesa * bopRatio;
 
+    // 未入力サイト数
+    const unmeasuredSites = ppdValues.filter(v => v === null).length;
+
     return {
         toothId: tooth.id,
         quadrant,
@@ -157,6 +162,7 @@ export function calculateToothPISA(tooth: ToothData, quadrant: Quadrant): ToothP
         bopTotal,
         bopRatio: Math.round(bopRatio * 1000) / 1000,
         pisa: Math.round(pisa * 100) / 100,
+        unmeasuredSites,
     };
 }
 
@@ -177,6 +183,7 @@ export function calculateFullMouthPISA(
     let totalBOPPositive = 0;
     let totalBOPSites = 0;
     let presentTeethCount = 0;
+    let totalUnmeasuredSites = 0;
 
     for (const q of quadrants) {
         const teeth = data[q];
@@ -188,7 +195,10 @@ export function calculateFullMouthPISA(
             totalPESA += result.pesa;
             totalBOPPositive += result.bopPositive;
             totalBOPSites += result.bopTotal;
-            if (!result.isMissing) presentTeethCount++;
+            if (!result.isMissing) {
+                presentTeethCount++;
+                totalUnmeasuredSites += (result as any).unmeasuredSites || 0;
+            }
         }
     }
 
@@ -209,5 +219,6 @@ export function calculateFullMouthPISA(
         teethResults,
         severity: getSeverity(totalPISA),
         presentTeethCount,
+        totalUnmeasuredSites,
     };
 }

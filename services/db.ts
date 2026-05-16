@@ -10,6 +10,9 @@ export interface ChartRecord {
   updatedAt: number;
   startTime?: string;
   endTime?: string;
+  examinerId?: string;
+  examinerName?: string;
+  examinerColor?: string;
 }
 
 // Open Database Helper

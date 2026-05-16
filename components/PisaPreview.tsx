@@ -11,6 +11,7 @@ interface PisaPreviewProps {
     };
     date: string;
     method: MeasurementMethod;
+    examiner?: { id: string; name: string; color: string };
 }
 
 const formatToothId = (id: number, isPrimary?: boolean) => {
@@ -39,7 +40,7 @@ function getPisaCellColor(pisa: number, isMissing: boolean): string {
 
 const baseCellClass = "border-r border-b border-slate-800 text-center text-xs relative p-0 overflow-hidden h-full print:border-black";
 
-const PisaPreview: React.FC<PisaPreviewProps> = ({ data, date, method }) => {
+const PisaPreview: React.FC<PisaPreviewProps> = ({ data, date, method, examiner }) => {
     const result = useMemo(() => calculateFullMouthPISA(data), [data]);
 
     const upperTeethUR = data.UR;
@@ -58,11 +59,30 @@ const PisaPreview: React.FC<PisaPreviewProps> = ({ data, date, method }) => {
 
     return (
         <div className="w-full max-w-[1100px] bg-white p-4 md:p-8 mx-auto text-slate-900 print:p-0 print:max-w-none">
+            {/* Unmeasured Warning */}
+            {result.totalUnmeasuredSites > 0 && (
+                <div className="mb-6 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl flex items-center gap-4 animate-pulse-slow print:border-amber-500">
+                    <div className="p-2 bg-amber-200 rounded-full text-amber-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div className="font-black text-amber-800">
+                            {result.totalUnmeasuredSites === result.totalBOPSites ? '未入力のため評価できません' : '未入力サイトがあります。PISAは参考値です。'}
+                        </div>
+                        <div className="text-xs text-amber-600 font-bold">
+                            全 {result.totalBOPSites} 部位中 {result.totalUnmeasuredSites} 部位が未入力です。
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Header */}
             <div className="flex justify-between items-end mb-6 border-b-2 border-slate-800 pb-2">
                 <h1 className="text-xl font-bold">PISA（歯周組織炎症面積）</h1>
                 <div className="flex gap-8 text-sm font-bold">
+                    {examiner && <div>実施者: {examiner.name}</div>}
                     <div>検査日 {date.replace(/-/g, '.')}</div>
                     <div>残存歯 {result.presentTeethCount}本</div>
                 </div>
