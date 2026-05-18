@@ -5,6 +5,7 @@ interface FurcationInputProps {
   onChange: (index: number, newValue: string | null) => void;
   variant: 'single' | 'horizontal' | 'vertical' | 'y-shape';
   disabled?: boolean;
+  height?: string;
 }
 
 const cycleValue = (current: string | null): string | null => {
@@ -26,7 +27,8 @@ export const FurcationInput: React.FC<FurcationInputProps> = ({
   values,
   onChange,
   variant,
-  disabled = false
+  disabled = false,
+  height = 'h-[40px]'
 }) => {
   const handleClick = (index: number) => {
     if (disabled) return;
@@ -44,7 +46,7 @@ export const FurcationInput: React.FC<FurcationInputProps> = ({
     // Right: (52.5, 25)
     // Top: (35, 8)
     return (
-      <div className="w-full h-[40px] bg-white select-none">
+      <div className={`w-full ${height} bg-white select-none`}>
         <svg
           viewBox="0 0 70 40"
           className="w-full h-full"
@@ -123,7 +125,7 @@ export const FurcationInput: React.FC<FurcationInputProps> = ({
     // Top half: (35, 10)
     // Bottom half: (35, 30)
     return (
-      <div className="w-full h-[40px] bg-white select-none">
+      <div className={`w-full ${height} bg-white select-none`}>
         <svg
           viewBox="0 0 70 40"
           className="w-full h-full"
@@ -188,7 +190,7 @@ export const FurcationInput: React.FC<FurcationInputProps> = ({
     // Left half: (17.5, 20)
     // Right half: (52.5, 20)
     return (
-      <div className="w-full h-[40px] bg-white select-none">
+      <div className={`w-full ${height} bg-white select-none`}>
         <svg
           viewBox="0 0 70 40"
           className="w-full h-full"
@@ -250,7 +252,7 @@ export const FurcationInput: React.FC<FurcationInputProps> = ({
   // Single cell (Default - other teeth)
   // Centroid: (35, 20)
   return (
-    <div className="w-full h-[40px] bg-white select-none">
+    <div className={`w-full ${height} bg-white select-none`}>
       <svg
         viewBox="0 0 70 40"
         className="w-full h-full"

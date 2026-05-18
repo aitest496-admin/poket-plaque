@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ToothData, MeasurementMethod } from '../types';
+import { FurcationInput } from './FurcationInput';
 
 interface DentalChartPrintViewProps {
   data: {
@@ -21,6 +22,73 @@ const formatToothId = (id: number, isPrimary?: boolean) => {
 
 // Collapsed border model: Cells have Right and Bottom borders. Container has Top and Left.
 const baseCellClass = "border-r border-b border-slate-800 text-center text-xs relative p-0 overflow-hidden h-full print:border-black";
+
+const getCellCount = (id: number, isUpper: boolean): 1 | 2 | 3 => {
+  if (isUpper) {
+    if (id >= 6) return 3;
+    if (id === 4 || id === 5) return 2;
+    return 1;
+  } else {
+    if (id >= 6) return 2;
+    return 1;
+  }
+};
+
+const getFurcationVariant = (id: number, isUpper: boolean): 'single' | 'horizontal' | 'vertical' | 'y-shape' => {
+  if (isUpper) {
+    if (id >= 6) return 'y-shape';
+    if (id === 4 || id === 5) return 'vertical';
+    return 'single';
+  } else {
+    if (id >= 6) return 'horizontal';
+    return 'single';
+  }
+};
+
+const getFurcationValues = (tooth: ToothData, count: number) => {
+  return tooth.furcation && tooth.furcation.length === count 
+    ? tooth.furcation 
+    : Array(count).fill(null);
+};
+
+const FurcationPrintCell: React.FC<{
+  tooth: ToothData;
+  isUpper: boolean;
+  colSpan: number;
+  isCenterSeparator?: boolean;
+  isLastTooth?: boolean;
+  isLastRow?: boolean;
+}> = ({ tooth, isUpper, colSpan, isCenterSeparator, isLastTooth, isLastRow }) => {
+  if (tooth.isMissing) {
+    return (
+      <div
+        className={`${baseCellClass} min-h-[24px] bg-slate-300 print:bg-slate-300 ${isCenterSeparator ? '!border-r-4' : ''} ${isLastTooth ? '!border-r-0' : ''} ${isLastRow ? '!border-b-0' : ''}`}
+        style={{ gridColumn: `span ${colSpan}` }}
+      />
+    );
+  }
+
+  const variant = getFurcationVariant(tooth.id, isUpper);
+  const count = getCellCount(tooth.id, isUpper);
+  const values = getFurcationValues(tooth, count);
+
+  return (
+    <div
+      className={`${baseCellClass} min-h-[24px] h-[24px] w-full flex items-center justify-center p-0 ${isCenterSeparator ? '!border-r-4' : ''} ${isLastTooth ? '!border-r-0' : ''} ${isLastRow ? '!border-b-0' : ''}`}
+      style={{ gridColumn: `span ${colSpan}` }}
+    >
+      <div className="w-full h-full flex items-center justify-center">
+        <FurcationInput
+          values={values}
+          onChange={() => {}}
+          variant={variant}
+          disabled={true}
+          height="h-[24px]"
+        />
+      </div>
+    </div>
+  );
+};
 
 const getDepthColor = (d: number | null) => {
   if (d === null) return 'bg-transparent';
@@ -124,6 +192,7 @@ const MeasurementCells: React.FC<{ tooth: ToothData, side: 'buccal' | 'lingual',
 };
 
 const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date, method, examiner }) => {
+  const [showFurcation, setShowFurcation] = useState(false);
   const upperTeeth = [...data.UR, ...data.UL];
   const lowerTeeth = [...data.LR, ...data.LL];
 
@@ -229,11 +298,43 @@ const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date,
         </div>
       </div>
 
+      {/* Checkbox for Furcation Involvement (Only for 6-point) */}
+      {method === '6-point' && (
+        <div className="flex justify-end mb-2 print:hidden select-none">
+          <label className="flex items-center gap-1.5 text-sm font-bold text-slate-800 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showFurcation}
+              onChange={(e) => setShowFurcation(e.target.checked)}
+              className="w-4 h-4 rounded border-slate-400 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+            />
+            <span>根分岐部病変を表示する</span>
+          </label>
+        </div>
+      )}
+
       {/* Main Table Container */}
       <div className="border-2 border-slate-800 select-none">
         
         {/* UPPER JAW */}
         <div className="grid" style={gridStyle}>
+             {/* Row 0: Furcation (Upper) */}
+             {method === '6-point' && showFurcation && (
+               <>
+                 <div className={`${labelClass}`}>根分岐部</div>
+                 {upperTeeth.map((t, i) => (
+                   <FurcationPrintCell
+                     key={t.id}
+                     tooth={t}
+                     isUpper={true}
+                     colSpan={config.colSpan}
+                     isCenterSeparator={i === 7}
+                     isLastTooth={i === upperTeeth.length - 1}
+                   />
+                 ))}
+               </>
+             )}
+
              {/* Row 1: Plaque */}
              <div className={`${labelClass}`}>プラーク</div>
              {upperTeeth.map((t, i) => <PlaqueCell key={t.id} tooth={t} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === upperTeeth.length - 1} />)}
@@ -298,8 +399,35 @@ const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date,
              {lowerTeeth.map((t, i) => <MobilityCell key={t.id} tooth={t} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === lowerTeeth.length - 1} />)}
 
              {/* Row 6: Plaque */}
-             <div className={`${labelClass} !border-b-0`} style={{ gridColumn: '1 / 2' }}>プラーク</div>
-             {lowerTeeth.map((t, i) => <PlaqueCell key={t.id} tooth={t} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === lowerTeeth.length - 1} isLastRow={true} />)}
+             <div className={`${labelClass} ${method === '6-point' && showFurcation ? '' : '!border-b-0'}`} style={{ gridColumn: '1 / 2' }}>プラーク</div>
+             {lowerTeeth.map((t, i) => (
+               <PlaqueCell
+                 key={t.id}
+                 tooth={t}
+                 colSpan={config.colSpan}
+                 isCenterSeparator={i === 7}
+                 isLastTooth={i === lowerTeeth.length - 1}
+                 isLastRow={!(method === '6-point' && showFurcation)}
+               />
+             ))}
+
+             {/* Row 7: Furcation (Lower) */}
+             {method === '6-point' && showFurcation && (
+               <>
+                 <div className={`${labelClass} !border-b-0`}>根分岐部</div>
+                 {lowerTeeth.map((t, i) => (
+                   <FurcationPrintCell
+                     key={t.id}
+                     tooth={t}
+                     isUpper={false}
+                     colSpan={config.colSpan}
+                     isCenterSeparator={i === 7}
+                     isLastTooth={i === lowerTeeth.length - 1}
+                     isLastRow={true}
+                   />
+                 ))}
+               </>
+             )}
         </div>
 
       </div>
