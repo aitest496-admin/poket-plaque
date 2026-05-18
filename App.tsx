@@ -368,6 +368,7 @@ const App: React.FC = () => {
     // Preview Mode State
     const [isPreviewMode, setIsPreviewMode] = useState(false);
     const [isPisaPreview, setIsPisaPreview] = useState(false); // PISA Preview toggle
+    const [showFurcation, setShowFurcation] = useState(false); // Global Furcation involvement visibility state
     const [isCompareMode, setIsCompareMode] = useState(false); // Comparison Mode State
     const [isCompareListOpen, setIsCompareListOpen] = useState(false); // Date Selection Modal for Compare
 
@@ -815,6 +816,20 @@ const App: React.FC = () => {
                     onTouchMove={handleTouchMove}
                     onTouchEnd={() => { touchStartDist.current = 0; }}
                 >
+                    {/* Global Furcation Toggle (Only for 6-point in Preview Mode) */}
+                    {measurementMethod === '6-point' && !isPisaPreview && (
+                        <div className="max-w-[1100px] w-full mx-auto mt-4 px-8 flex justify-end print:hidden select-none">
+                            <label className="flex items-center gap-1.5 text-sm font-bold text-slate-800 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm hover:bg-slate-50 transition-colors">
+                                <input
+                                    type="checkbox"
+                                    checked={showFurcation}
+                                    onChange={(e) => setShowFurcation(e.target.checked)}
+                                    className="w-4 h-4 rounded border-slate-400 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                />
+                                <span>根分岐部病変を表示する</span>
+                            </label>
+                        </div>
+                    )}
                     {/* Wrapper for scrolling: ensure min dimensions based on scaled content */}
                     <div
                         className="flex justify-center items-start p-8"
@@ -848,6 +863,7 @@ const App: React.FC = () => {
                                         date={selectedDate}
                                         method={measurementMethod}
                                         examiner={selectedExaminer}
+                                        showFurcation={showFurcation}
                                     />
                                 )}
                             </div>
@@ -892,6 +908,7 @@ const App: React.FC = () => {
                                                     date={date}
                                                     method={measurementMethod}
                                                     examiner={recordExaminer}
+                                                    showFurcation={showFurcation}
                                                 />
                                             )}
                                         </div>
@@ -1105,7 +1122,7 @@ const App: React.FC = () => {
                                 className={`p-2 border rounded-lg shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center ${isPreviewMode ? 'bg-slate-800 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200'}`}
                                 onPointerDown={() => {
                                     if (isPreviewMode) {
-                                        setIsPreviewMode(false); setIsPisaPreview(false); setIsCompareMode(false); setCompareTargetDates([]); setZoomLevel(0.7); setPreviewContentHeight(0);
+                                        setIsPreviewMode(false); setIsPisaPreview(false); setShowFurcation(false); setIsCompareMode(false); setCompareTargetDates([]); setZoomLevel(0.7); setPreviewContentHeight(0);
                                     } else {
                                         if (isDirty) setIsSaveConfirmModalOpen(true); else setIsPreviewMode(true);
                                     }

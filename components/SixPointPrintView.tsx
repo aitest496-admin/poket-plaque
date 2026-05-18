@@ -12,6 +12,7 @@ interface DentalChartPrintViewProps {
   date: string;
   method: MeasurementMethod;
   examiner?: { id: string; name: string; color: string };
+  showFurcation?: boolean;
 }
 
 const formatToothId = (id: number, isPrimary?: boolean) => {
@@ -191,8 +192,7 @@ const MeasurementCells: React.FC<{ tooth: ToothData, side: 'buccal' | 'lingual',
   );
 };
 
-const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date, method, examiner }) => {
-  const [showFurcation, setShowFurcation] = useState(false);
+const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date, method, examiner, showFurcation = false }) => {
   const upperTeeth = [...data.UR, ...data.UL];
   const lowerTeeth = [...data.LR, ...data.LL];
 
@@ -298,20 +298,7 @@ const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date,
         </div>
       </div>
 
-      {/* Checkbox for Furcation Involvement (Only for 6-point) */}
-      {method === '6-point' && (
-        <div className="flex justify-end mb-2 print:hidden select-none">
-          <label className="flex items-center gap-1.5 text-sm font-bold text-slate-800 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={showFurcation}
-              onChange={(e) => setShowFurcation(e.target.checked)}
-              className="w-4 h-4 rounded border-slate-400 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-            />
-            <span>根分岐部病変を表示する</span>
-          </label>
-        </div>
-      )}
+
 
       {/* Main Table Container */}
       <div className="border-2 border-slate-800 select-none">
