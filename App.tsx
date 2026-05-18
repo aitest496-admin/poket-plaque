@@ -19,8 +19,16 @@ const mockExaminers: Examiner[] = [
 // Helper to create a single tooth
 const createTooth = (id: number, isUpper: boolean): ToothData => {
     let furcationLength = 1;
-    if (id >= 6) {
-        furcationLength = isUpper ? 3 : 2;
+    if (isUpper) {
+        if (id >= 6) {
+            furcationLength = 3;
+        } else if (id === 4 || id === 5) {
+            furcationLength = 2;
+        }
+    } else {
+        if (id >= 6) {
+            furcationLength = 2;
+        }
     }
     return {
         id,
@@ -264,8 +272,16 @@ const ensureFurcationInRecord = (data: any) => {
             data[method][quad] = data[method][quad].map((tooth: any) => {
                 const isUpper = quad.startsWith('U');
                 let furcationLength = 1;
-                if (tooth.id >= 6) {
-                    furcationLength = isUpper ? 3 : 2;
+                if (isUpper) {
+                    if (tooth.id >= 6) {
+                        furcationLength = 3;
+                    } else if (tooth.id === 4 || tooth.id === 5) {
+                        furcationLength = 2;
+                    }
+                } else {
+                    if (tooth.id >= 6) {
+                        furcationLength = 2;
+                    }
                 }
                 
                 // If furcation is missing or has incorrect length, initialize it

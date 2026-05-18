@@ -3,7 +3,7 @@ import React from 'react';
 interface FurcationInputProps {
   values: (string | null)[];
   onChange: (index: number, newValue: string | null) => void;
-  cellCount: 1 | 2 | 3;
+  variant: 'single' | 'horizontal' | 'vertical' | 'y-shape';
   disabled?: boolean;
 }
 
@@ -25,7 +25,7 @@ const getFillColor = (val: string | null): string => {
 export const FurcationInput: React.FC<FurcationInputProps> = ({
   values,
   onChange,
-  cellCount,
+  variant,
   disabled = false
 }) => {
   const handleClick = (index: number) => {
@@ -37,12 +37,12 @@ export const FurcationInput: React.FC<FurcationInputProps> = ({
 
   const strokeColor = '#999999';
 
-  if (cellCount === 3) {
+  if (variant === 'y-shape') {
     // Upper Molars - Y-shaped division (3 regions)
     // Centroids:
-    // Top-Left: (17.5, 12)
-    // Top-Right: (52.5, 12)
-    // Bottom: (35, 30)
+    // Left: (17.5, 25)
+    // Right: (52.5, 25)
+    // Top: (35, 8)
     return (
       <div className="w-full h-[40px] bg-white select-none">
         <svg
@@ -117,7 +117,7 @@ export const FurcationInput: React.FC<FurcationInputProps> = ({
     );
   }
 
-  if (cellCount === 2) {
+  if (variant === 'horizontal') {
     // Lower Molars - Horizontal division (2 regions)
     // Centroids:
     // Top half: (35, 10)
@@ -170,6 +170,71 @@ export const FurcationInput: React.FC<FurcationInputProps> = ({
             <text
               x="35"
               y="30"
+              textAnchor="middle"
+              dominantBaseline="central"
+              className="font-bold text-[13px] fill-slate-800 pointer-events-none select-none"
+            >
+              {values[1]}
+            </text>
+          )}
+        </svg>
+      </div>
+    );
+  }
+
+  if (variant === 'vertical') {
+    // Upper Premolars 4 & 5 - Vertical division (2 regions: Left & Right)
+    // Centroids:
+    // Left half: (17.5, 20)
+    // Right half: (52.5, 20)
+    return (
+      <div className="w-full h-[40px] bg-white select-none">
+        <svg
+          viewBox="0 0 70 40"
+          className="w-full h-full"
+          preserveAspectRatio="none"
+        >
+          {/* Left Half */}
+          <rect
+            x="0"
+            y="0"
+            width="35"
+            height="40"
+            fill={getFillColor(values[0])}
+            stroke={strokeColor}
+            strokeWidth="1"
+            onClick={() => handleClick(0)}
+            className={disabled ? 'cursor-not-allowed' : 'cursor-pointer hover:opacity-90 transition-opacity'}
+          />
+          {/* Right Half */}
+          <rect
+            x="35"
+            y="0"
+            width="35"
+            height="40"
+            fill={getFillColor(values[1])}
+            stroke={strokeColor}
+            strokeWidth="1"
+            onClick={() => handleClick(1)}
+            className={disabled ? 'cursor-not-allowed' : 'cursor-pointer hover:opacity-90 transition-opacity'}
+          />
+
+          {/* Text labels */}
+          {values[0] && (
+            <text
+              x="17.5"
+              y="20"
+              textAnchor="middle"
+              dominantBaseline="central"
+              className="font-bold text-[13px] fill-slate-800 pointer-events-none select-none"
+            >
+              {values[0]}
+            </text>
+          )}
+          {values[1] && (
+            <text
+              x="52.5"
+              y="20"
               textAnchor="middle"
               dominantBaseline="central"
               className="font-bold text-[13px] fill-slate-800 pointer-events-none select-none"

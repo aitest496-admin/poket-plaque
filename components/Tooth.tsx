@@ -50,10 +50,25 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
   };
 
   const getCellCount = (id: number, isUpper: boolean): 1 | 2 | 3 => {
-    if (id >= 6) {
-      return isUpper ? 3 : 2;
+    if (isUpper) {
+      if (id >= 6) return 3;
+      if (id === 4 || id === 5) return 2;
+      return 1;
+    } else {
+      if (id >= 6) return 2;
+      return 1;
     }
-    return 1;
+  };
+
+  const getFurcationVariant = (id: number, isUpper: boolean): 'single' | 'horizontal' | 'vertical' | 'y-shape' => {
+    if (isUpper) {
+      if (id >= 6) return 'y-shape';
+      if (id === 4 || id === 5) return 'vertical';
+      return 'single';
+    } else {
+      if (id >= 6) return 'horizontal';
+      return 'single';
+    }
   };
 
   const getFurcationValues = (tooth: ToothData, count: number) => {
@@ -446,7 +461,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
                 <FurcationInput
                   values={furcationValues}
                   onChange={handleFurcationChange}
-                  cellCount={cellCount}
+                  variant={getFurcationVariant(data.id, isUpper)}
                   disabled={data.isMissing}
                 />
               </div>
@@ -529,7 +544,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
                 <FurcationInput
                   values={furcationValues}
                   onChange={handleFurcationChange}
-                  cellCount={cellCount}
+                  variant={getFurcationVariant(data.id, isUpper)}
                   disabled={data.isMissing}
                 />
               </div>
