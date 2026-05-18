@@ -17,26 +17,33 @@ const mockExaminers: Examiner[] = [
 ];
 
 // Helper to create a single tooth
-const createTooth = (id: number): ToothData => ({
-    id,
-    mobility: 0,
-    plaque: { distal: false, buccal: false, mesial: false, lingual: false, occlusal: false },
-    pus: { buccal: [false, false, false], lingual: [false, false, false] },
-    bleeding: { buccal: [false, false, false], lingual: [false, false, false] },
-    pocketDepth: { buccal: [null, null, null], lingual: [null, null, null] },
-    isMissing: false,
-    isPrimary: false,
-});
+const createTooth = (id: number, isUpper: boolean): ToothData => {
+    let furcationLength = 1;
+    if (id >= 6) {
+        furcationLength = isUpper ? 3 : 2;
+    }
+    return {
+        id,
+        mobility: 0,
+        plaque: { distal: false, buccal: false, mesial: false, lingual: false, occlusal: false },
+        pus: { buccal: [false, false, false], lingual: [false, false, false] },
+        bleeding: { buccal: [false, false, false], lingual: [false, false, false] },
+        pocketDepth: { buccal: [null, null, null], lingual: [null, null, null] },
+        isMissing: false,
+        isPrimary: false,
+        furcation: Array(furcationLength).fill(null),
+    };
+};
 
 // Helper to generate a range of teeth
-const generateTeeth = (ids: number[]) => ids.map(createTooth);
+const generateTeeth = (ids: number[], isUpper: boolean) => ids.map(id => createTooth(id, isUpper));
 
 // Helper to generate full mouth data structure
 const generateFullMouth = () => ({
-    UL: generateTeeth([1, 2, 3, 4, 5, 6, 7, 8]),       // Left Upper: 1 to 8 (Center to Left)
-    UR: generateTeeth([8, 7, 6, 5, 4, 3, 2, 1]),       // Right Upper: 8 to 1 (Right to Center)
-    LL: generateTeeth([1, 2, 3, 4, 5, 6, 7, 8]),       // Left Lower: 1 to 8 (Center to Left)
-    LR: generateTeeth([8, 7, 6, 5, 4, 3, 2, 1]),       // Right Lower: 8 to 1 (Right to Center)
+    UL: generateTeeth([1, 2, 3, 4, 5, 6, 7, 8], true),       // Left Upper: 1 to 8 (Center to Left)
+    UR: generateTeeth([8, 7, 6, 5, 4, 3, 2, 1], true),       // Right Upper: 8 to 1 (Right to Center)
+    LL: generateTeeth([1, 2, 3, 4, 5, 6, 7, 8], false),      // Left Lower: 1 to 8 (Center to Left)
+    LR: generateTeeth([8, 7, 6, 5, 4, 3, 2, 1], false),      // Right Lower: 8 to 1 (Right to Center)
 });
 
 type Quadrant = 'UL' | 'UR' | 'LL' | 'LR';
@@ -164,6 +171,8 @@ const SideLabels = ({ jaw, method }: { jaw: 'upper' | 'lower', method: Measureme
     const hBleeding = 26;   // ThreePointToggle h-[26px]
     const hPD = 245;        // PocketDepthChart total: input(42.5) + 9cells(9×22.5)
     const hID = 52;         // Tooth ID h-[52px]
+    const hFurcation = 40;  // Furcation involvement h-[40px]
+    const hGap = 8;         // Gap spacing h-[8px]
 
     // Simple label row with exact height
     const Label = ({ text, h }: { text: string, h: number }) => (
@@ -194,6 +203,12 @@ const SideLabels = ({ jaw, method }: { jaw: 'upper' | 'lower', method: Measureme
             {/* === TOP BLOCK === */}
             {jaw === 'upper' ? (
                 <>
+                    {method === '6-point' && (
+                        <>
+                            <Label text="分岐部" h={hFurcation} />
+                            <Spacer h={hGap} />
+                        </>
+                    )}
                     <Spacer h={hPlaque} />
                     <Label text="動揺" h={hMobility} />
                     <Label text="排膿" h={hPus} />
@@ -225,10 +240,46 @@ const SideLabels = ({ jaw, method }: { jaw: 'upper' | 'lower', method: Measureme
                     <Label text="排膿" h={hPus} />
                     <Label text="動揺" h={hMobility} />
                     <Spacer h={hPlaque} />
+                    {method === '6-point' && (
+                        <>
+                            <Spacer h={hGap} />
+                            <Label text="分岐部" h={hFurcation} />
+                        </>
+                    )}
                 </>
             )}
         </div>
     );
+};
+
+const ensureFurcationInRecord = (data: any) => {
+    if (!data) return data;
+    const methods: MeasurementMethod[] = ['1-point', '4-point', '6-point'];
+    const quadrants: Quadrant[] = ['UL', 'UR', 'LL', 'LR'];
+    
+    methods.forEach(method => {
+        if (!data[method]) return;
+        quadrants.forEach(quad => {
+            if (!data[method][quad]) return;
+            data[method][quad] = data[method][quad].map((tooth: any) => {
+                const isUpper = quad.startsWith('U');
+                let furcationLength = 1;
+                if (tooth.id >= 6) {
+                    furcationLength = isUpper ? 3 : 2;
+                }
+                
+                // If furcation is missing or has incorrect length, initialize it
+                if (!tooth.furcation || tooth.furcation.length !== furcationLength) {
+                    return {
+                        ...tooth,
+                        furcation: Array(furcationLength).fill(null)
+                    };
+                }
+                return tooth;
+            });
+        });
+    });
+    return data;
 };
 
 const App: React.FC = () => {
@@ -383,7 +434,8 @@ const App: React.FC = () => {
         try {
             const record = await DentalDB.getChart(date);
             if (record) {
-                setAllTeethData(record.data);
+                const upgradedData = ensureFurcationInRecord(record.data);
+                setAllTeethData(upgradedData);
                 if (record.startTime && record.endTime) {
                     setStartTime(record.startTime);
                     setEndTime(record.endTime);
@@ -440,6 +492,7 @@ const App: React.FC = () => {
             try {
                 const record = await DentalDB.getChart(date);
                 if (record) {
+                    record.data = ensureFurcationInRecord(record.data);
                     newData[date] = record;
                     loadedCount++;
                 }

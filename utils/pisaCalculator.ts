@@ -125,6 +125,7 @@ export function calculateToothPISA(tooth: ToothData, quadrant: Quadrant): ToothP
             bopTotal: 0,
             bopRatio: 0,
             pisa: 0,
+            unmeasuredSites: 0,
         };
     }
 

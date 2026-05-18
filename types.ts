@@ -25,6 +25,7 @@ export interface ToothData {
 
     isMissing?: boolean; // Indicates if the tooth is missing
     isPrimary?: boolean; // New: Indicates if the tooth is a primary tooth
+    furcation?: (string | null)[]; // New: Furcation Involvement values (['Ⅰ', 'Ⅱ', 'Ⅲ' or null])
 }
 
 export enum Surface {

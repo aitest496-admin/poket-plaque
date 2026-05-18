@@ -3,6 +3,7 @@ import { ToothData, Surface, MeasurementPoint, MeasurementMethod } from '../type
 import PlaqueDiagram from './PlaqueDiagram';
 import ThreePointToggle from './ThreePointToggle';
 import PocketDepthChart from './PocketDepthChart';
+import { FurcationInput } from './FurcationInput';
 
 interface ToothProps {
   data: ToothData;
@@ -46,6 +47,33 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
   const handleMobilityChange = (delta: number) => {
     const newVal = Math.min(3, Math.max(0, data.mobility + delta));
     onUpdate({ ...data, mobility: newVal });
+  };
+
+  const getCellCount = (id: number, isUpper: boolean): 1 | 2 | 3 => {
+    if (id >= 6) {
+      return isUpper ? 3 : 2;
+    }
+    return 1;
+  };
+
+  const getFurcationValues = (tooth: ToothData, count: number) => {
+    return tooth.furcation && tooth.furcation.length === count 
+      ? tooth.furcation 
+      : Array(count).fill(null);
+  };
+
+  const handleFurcationChange = (index: number, newValue: string | null) => {
+    const isUpper = jaw === 'upper';
+    const cellCount = getCellCount(data.id, isUpper);
+    const currentFurcation = data.furcation && data.furcation.length === cellCount 
+      ? [...data.furcation] 
+      : Array(cellCount).fill(null);
+    
+    currentFurcation[index] = newValue;
+    onUpdate({
+      ...data,
+      furcation: currentFurcation
+    });
   };
 
   const updateMeasurement = <T extends unknown>(
@@ -401,6 +429,10 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
 
   // Define content variables instead of inner components to avoid remounting on every render
 
+  const isUpper = jaw === 'upper';
+  const cellCount = getCellCount(data.id, isUpper);
+  const furcationValues = getFurcationValues(data, cellCount);
+
   // complexAContent: The "Outer" block logic (Contains Plaque/Mobility logic)
   // Now mapped to BUCCAL Data
   const complexAContent = (
@@ -408,6 +440,19 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
       {data.isMissing && <MissingOverlay />}
       {jaw === 'upper' && (
         <>
+          {method === '6-point' && (
+            <>
+              <div className="border-b border-[#ccc] w-full">
+                <FurcationInput
+                  values={furcationValues}
+                  onChange={handleFurcationChange}
+                  cellCount={cellCount}
+                  disabled={data.isMissing}
+                />
+              </div>
+              <div className="h-2 bg-slate-100 border-b border-[#ccc] w-full" />
+            </>
+          )}
           {/* Plaque Diagram (Outer Most) */}
           <div className={`border-b border-[#ccc] w-full ${isLarge ? 'h-[70px]' : ''}`}>
             <PlaqueDiagram
@@ -477,6 +522,19 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
               variant="simple"
             />
           </div>
+          {method === '6-point' && (
+            <>
+              <div className="h-2 bg-slate-100 border-t border-[#ccc] w-full" />
+              <div className="border-t border-[#ccc] w-full">
+                <FurcationInput
+                  values={furcationValues}
+                  onChange={handleFurcationChange}
+                  cellCount={cellCount}
+                  disabled={data.isMissing}
+                />
+              </div>
+            </>
+          )}
         </>
       )}
     </div>
