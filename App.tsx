@@ -3,18 +3,78 @@ import Tooth from './components/Tooth';
 import DentalChartPrintView from './components/SixPointPrintView';
 import PisaPreview from './components/PisaPreview';
 import { ToothData, MeasurementMethod } from './types';
-import { DentalDB } from './services/db';
+import { DentalDB, ExaminerRecord } from './services/db';
 import CalendarModal from './components/CalendarModal';
 import SettingsModal from './components/SettingsModal';
-import ExaminerModal, { Examiner } from './components/ExaminerModal';
+import ExaminerModal, { Examiner, NONE_EXAMINER_ID } from './components/ExaminerModal';
 
-const mockExaminers: Examiner[] = [
-    { id: '1', name: '山田 太郎', color: 'bg-blue-600' },
-    { id: '2', name: '鈴木 和子', color: 'bg-emerald-600' },
-    { id: '3', name: '佐藤 健一', color: 'bg-amber-500' },
-    { id: '4', name: '田中 美香', color: 'bg-rose-500' },
-    { id: '5', name: '伊藤 隆', color: 'bg-indigo-600' },
+const examinerColors = [
+    'bg-blue-600',
+    'bg-emerald-600',
+    'bg-amber-500',
+    'bg-rose-500',
+    'bg-indigo-600',
+    'bg-cyan-600',
+    'bg-violet-600',
+    'bg-teal-600',
 ];
+
+const noneExaminer: Examiner = {
+    id: NONE_EXAMINER_ID,
+    name: '担当無し',
+    role: 'none',
+    color: 'bg-slate-400',
+    order: 0,
+    hidden: false,
+};
+
+const defaultExaminers: Examiner[] = [
+    noneExaminer,
+    { id: '1', name: '山田 太郎', role: 'dentist', color: 'bg-blue-600', order: 1, hidden: false },
+    { id: '2', name: '鈴木 和子', role: 'hygienist', color: 'bg-emerald-600', order: 2, hidden: false },
+    { id: '3', name: '佐藤 健一', role: 'dentist', color: 'bg-amber-500', order: 3, hidden: false },
+    { id: '4', name: '田中 美香', role: 'hygienist', color: 'bg-rose-500', order: 4, hidden: false },
+    { id: '5', name: '伊藤 隆', role: 'dentist', color: 'bg-indigo-600', order: 5, hidden: false },
+];
+
+const normalizeExaminers = (source: Array<Partial<ExaminerRecord> | Examiner>): Examiner[] => {
+    const byId = new Map<string, Examiner>();
+
+    source.forEach((item, index) => {
+        if (!item.id || item.id === NONE_EXAMINER_ID) return;
+        byId.set(item.id, {
+            id: item.id,
+            name: item.name || '名称未設定',
+            role: item.role === 'dentist' || item.role === 'hygienist' ? item.role : 'hygienist',
+            color: item.color || examinerColors[index % examinerColors.length],
+            order: typeof item.order === 'number' ? item.order : index + 1,
+            hidden: Boolean(item.hidden),
+        });
+    });
+
+    const normalized = Array.from(byId.values())
+        .sort((a, b) => a.order - b.order)
+        .map((examiner, index) => ({ ...examiner, order: index + 1 }));
+
+    return [noneExaminer, ...normalized];
+};
+
+const toExaminerRecords = (items: Examiner[]): ExaminerRecord[] => (
+    items.map((item, index) => ({
+        id: item.id,
+        name: item.name,
+        role: item.role,
+        color: item.color,
+        order: item.id === NONE_EXAMINER_ID ? 0 : index,
+        hidden: item.id === NONE_EXAMINER_ID ? false : Boolean(item.hidden),
+    }))
+);
+
+const getExaminerShortLabel = (examiner: Examiner) => {
+    if (examiner.id === NONE_EXAMINER_ID) return 'なし';
+    const parts = examiner.name.trim().split(/\s+/);
+    return parts.length >= 2 ? parts[0][0] + parts[1][0] : examiner.name.substring(0, 2);
+};
 
 // Helper to create a single tooth
 const createTooth = (id: number, isUpper: boolean): ToothData => {
@@ -309,7 +369,8 @@ const App: React.FC = () => {
     const [totalMinutes, setTotalMinutes] = useState<number>(0);
 
     // Examiner State
-    const [selectedExaminer, setSelectedExaminer] = useState<Examiner>(mockExaminers[0]);
+    const [examiners, setExaminers] = useState<Examiner[]>(defaultExaminers);
+    const [selectedExaminer, setSelectedExaminer] = useState<Examiner>(noneExaminer);
     const [isExaminerModalOpen, setIsExaminerModalOpen] = useState(false);
 
     // Time Helpers
@@ -447,6 +508,30 @@ const App: React.FC = () => {
         }
     }, []);
 
+    const persistExaminers = useCallback(async (nextExaminers: Examiner[]) => {
+        const normalized = normalizeExaminers(nextExaminers);
+        setExaminers(normalized);
+        await DentalDB.saveAllExaminers(toExaminerRecords(normalized));
+        return normalized;
+    }, []);
+
+    const loadExaminers = useCallback(async () => {
+        try {
+            const stored = await DentalDB.getAllExaminers();
+            const normalized = stored.length > 0 ? normalizeExaminers(stored) : defaultExaminers;
+            const shouldSaveDefaults = stored.length === 0 || !stored.some((examiner) => examiner.id === NONE_EXAMINER_ID);
+
+            setExaminers(normalized);
+            if (shouldSaveDefaults) {
+                await DentalDB.saveAllExaminers(toExaminerRecords(normalized));
+            }
+        } catch (error) {
+            console.error("Failed to load examiners", error);
+            setExaminers(defaultExaminers);
+            setToast({ message: "担当者情報の読み込みに失敗しました", type: 'error' });
+        }
+    }, []);
+
     const loadDataForDate = useCallback(async (date: string) => {
         try {
             const record = await DentalDB.getChart(date);
@@ -465,7 +550,7 @@ const App: React.FC = () => {
 
                 // Restore examiner
                 if (record.examinerId) {
-                    const found = mockExaminers.find(e => e.id === record.examinerId);
+                    const found = examiners.find(e => e.id === record.examinerId);
                     if (found) {
                         setSelectedExaminer(found);
                     } else if (record.examinerName) {
@@ -473,11 +558,28 @@ const App: React.FC = () => {
                         setSelectedExaminer({
                             id: record.examinerId,
                             name: record.examinerName,
-                            color: record.examinerColor || 'bg-slate-500'
+                            role: record.examinerRole === 'dentist' || record.examinerRole === 'hygienist' ? record.examinerRole : 'hygienist',
+                            color: record.examinerColor || 'bg-slate-500',
+                            order: examiners.length + 1,
+                            hidden: false,
+                        });
+                    }
+                } else if (record.examinerName) {
+                    const foundByName = examiners.find(e => e.name === record.examinerName);
+                    if (foundByName) {
+                        setSelectedExaminer(foundByName);
+                    } else {
+                        setSelectedExaminer({
+                            id: `legacy-${record.examinerName}`,
+                            name: record.examinerName,
+                            role: record.examinerRole === 'dentist' || record.examinerRole === 'hygienist' ? record.examinerRole : 'hygienist',
+                            color: record.examinerColor || 'bg-slate-500',
+                            order: examiners.length + 1,
+                            hidden: false,
                         });
                     }
                 } else {
-                    setSelectedExaminer(mockExaminers[0]);
+                    setSelectedExaminer(noneExaminer);
                 }
 
                 setToast({ message: `${date.replace(/-/g, '/')} のデータを読み込みました`, type: 'info' });
@@ -492,14 +594,14 @@ const App: React.FC = () => {
                 const now = new Date();
                 setStartTime(formatTime(now));
                 setEndTime(formatTime(new Date(now.getTime() + 15 * 60000)));
-                setSelectedExaminer(mockExaminers[0]);
+                setSelectedExaminer(noneExaminer);
             }
             setIsDirty(false); // Reset dirty state on load
         } catch (error) {
             console.error("Failed to load data", error);
             setToast({ message: "データの読み込みに失敗しました", type: 'error' });
         }
-    }, []);
+    }, [examiners]);
 
     // Load data for multiple comparison dates
     const loadComparisonData = async (dates: string[]) => {
@@ -533,7 +635,8 @@ const App: React.FC = () => {
                 endTime,
                 examinerId: selectedExaminer.id,
                 examinerName: selectedExaminer.name,
-                examinerColor: selectedExaminer.color
+                examinerColor: selectedExaminer.color,
+                examinerRole: selectedExaminer.role
             });
             setToast({ message: "保存しました", type: 'success' });
             await updateMarkedDates(); // Update calendar markers
@@ -564,6 +667,11 @@ const App: React.FC = () => {
             setSelectedDate(date);
         }
     };
+
+    // Initial load and when date changes
+    useEffect(() => {
+        loadExaminers();
+    }, [loadExaminers]);
 
     // Initial load and when date changes
     useEffect(() => {
@@ -666,6 +774,113 @@ const App: React.FC = () => {
         } catch (e) {
             console.error("Failed to delete saved data", e);
             setToast({ message: "削除に失敗しました", type: 'error' });
+        }
+    };
+
+    const handleAddExaminer = async ({ name, role }: { name: string; role: 'dentist' | 'hygienist' }) => {
+        const maxOrder = Math.max(0, ...examiners.map((examiner) => examiner.order));
+        const newExaminer: Examiner = {
+            id: `examiner-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            name,
+            role,
+            color: examinerColors[(examiners.length - 1) % examinerColors.length],
+            order: maxOrder + 1,
+            hidden: false,
+        };
+
+        await persistExaminers([...examiners, newExaminer]);
+        setSelectedExaminer(newExaminer);
+        setIsDirty(true);
+        setToast({ message: "担当者を追加しました", type: 'success' });
+    };
+
+    const handleUpdateExaminer = async (id: string, updates: Partial<Pick<Examiner, 'name' | 'role'>>) => {
+        if (id === NONE_EXAMINER_ID) return;
+
+        const next = await persistExaminers(examiners.map((examiner) => (
+            examiner.id === id ? { ...examiner, ...updates } : examiner
+        )));
+        const updatedSelected = next.find((examiner) => examiner.id === selectedExaminer.id);
+        if (updatedSelected) {
+            setSelectedExaminer(updatedSelected);
+            setIsDirty(true);
+        }
+        setToast({ message: "担当者を更新しました", type: 'success' });
+    };
+
+    const handleMoveExaminer = async (id: string, direction: 'up' | 'down') => {
+        if (id === NONE_EXAMINER_ID) return;
+
+        const editable = examiners
+            .filter((examiner) => examiner.id !== NONE_EXAMINER_ID)
+            .sort((a, b) => a.order - b.order);
+        const currentIndex = editable.findIndex((examiner) => examiner.id === id);
+        const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+
+        if (currentIndex < 0 || targetIndex < 0 || targetIndex >= editable.length) return;
+
+        const reordered = [...editable];
+        const [target] = reordered.splice(currentIndex, 1);
+        reordered.splice(targetIndex, 0, target);
+
+        await persistExaminers([
+            noneExaminer,
+            ...reordered.map((examiner, index) => ({ ...examiner, order: index + 1 })),
+        ]);
+    };
+
+    const handleToggleExaminerHidden = async (id: string, hidden: boolean) => {
+        if (id === NONE_EXAMINER_ID) return;
+
+        await persistExaminers(examiners.map((examiner) => (
+            examiner.id === id ? { ...examiner, hidden } : examiner
+        )));
+
+        if (hidden && selectedExaminer.id === id) {
+            setSelectedExaminer(noneExaminer);
+            setIsDirty(true);
+        }
+
+        setToast({ message: hidden ? "担当者を非表示にしました" : "担当者を再表示しました", type: 'success' });
+    };
+
+    const handleDeleteExaminer = async (id: string) => {
+        if (id === NONE_EXAMINER_ID) return;
+
+        try {
+            await DentalDB.deleteExaminer(id);
+            await DentalDB.reassignExaminerInCharts(id);
+
+            const normalized = normalizeExaminers(examiners.filter((examiner) => examiner.id !== id));
+            setExaminers(normalized);
+            await DentalDB.saveAllExaminers(toExaminerRecords(normalized));
+
+            if (selectedExaminer.id === id) {
+                setSelectedExaminer(noneExaminer);
+                setIsDirty(true);
+            }
+
+            setComparisonData(prev => {
+                const next: Record<string, any> = {};
+                Object.keys(prev).forEach((date) => {
+                    const record = prev[date] as any;
+                    next[date] = record?.examinerId === id
+                        ? {
+                            ...record,
+                            examinerId: NONE_EXAMINER_ID,
+                            examinerName: noneExaminer.name,
+                            examinerColor: noneExaminer.color,
+                            examinerRole: noneExaminer.role,
+                        }
+                        : record;
+                });
+                return next;
+            });
+
+            setToast({ message: "担当者を削除し、過去検査を担当無しへ変更しました", type: 'success' });
+        } catch (error) {
+            console.error("Failed to delete examiner", error);
+            setToast({ message: "担当者の削除に失敗しました", type: 'error' });
         }
     };
 
@@ -1145,10 +1360,7 @@ const App: React.FC = () => {
                                     ${selectedExaminer.color}
                                 `}
                             >
-                                {(() => {
-                                    const parts = selectedExaminer.name.split(/\s+/);
-                                    return parts.length >= 2 ? parts[0][0] + parts[1][0] : selectedExaminer.name.substring(0, 2);
-                                })()}
+                                {getExaminerShortLabel(selectedExaminer)}
                             </button>
                         </WithTooltip>
                     </div>
@@ -1513,13 +1725,18 @@ const App: React.FC = () => {
             <ExaminerModal
                 isOpen={isExaminerModalOpen}
                 onClose={() => setIsExaminerModalOpen(false)}
-                examiners={mockExaminers}
+                examiners={examiners}
                 onSelect={(examiner) => {
                     setSelectedExaminer(examiner);
                     setIsExaminerModalOpen(false);
                     setIsDirty(true);
                 }}
                 selectedId={selectedExaminer.id}
+                onAdd={handleAddExaminer}
+                onUpdate={handleUpdateExaminer}
+                onMove={handleMoveExaminer}
+                onToggleHidden={handleToggleExaminerHidden}
+                onDelete={handleDeleteExaminer}
             />
 
         </div>
