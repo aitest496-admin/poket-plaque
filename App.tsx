@@ -760,6 +760,13 @@ const App: React.FC = () => {
         return '#ffffff';
     };
 
+    const getCanvasFurcationColor = (value: string | null) => {
+        if (value === 'Ⅰ') return '#fef9c3';
+        if (value === 'Ⅱ') return '#ffedd5';
+        if (value === 'Ⅲ') return '#fee2e2';
+        return '#ffffff';
+    };
+
     const createPreviewImageBlob = async (): Promise<Blob> => {
         const entries = [
             { date: selectedDate, data: allTeethData[measurementMethod], examiner: selectedExaminer, comparisonLabel: '' },
@@ -892,17 +899,49 @@ const App: React.FC = () => {
             if (tooth.isMissing) return;
             const count = isUpper ? (tooth.id >= 6 ? 3 : tooth.id >= 4 ? 2 : 1) : (tooth.id >= 6 ? 2 : 1);
             const values = tooth.furcation && tooth.furcation.length === count ? tooth.furcation : Array(count).fill(null);
-            const cellWidth = w / count;
-            values.forEach((value, index) => {
-                if (index > 0) {
-                    ctx.strokeStyle = '#94a3b8';
-                    ctx.beginPath();
-                    ctx.moveTo(x + index * cellWidth, y);
-                    ctx.lineTo(x + index * cellWidth, y + h);
-                    ctx.stroke();
-                }
-                if (value) drawText(value, x + index * cellWidth + cellWidth / 2, y + h / 2, 12, '800');
-            });
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 1;
+
+            const drawPolygon = (points: Array<[number, number]>, fill: string) => {
+                ctx.beginPath();
+                ctx.moveTo(points[0][0], points[0][1]);
+                points.slice(1).forEach(([px, py]) => ctx.lineTo(px, py));
+                ctx.closePath();
+                ctx.fillStyle = fill;
+                ctx.fill();
+                ctx.stroke();
+            };
+
+            if (isUpper && tooth.id >= 6) {
+                const centerX = x + w / 2;
+                const centerY = y + h / 2;
+                drawPolygon([[x, y], [centerX, centerY], [centerX, y + h], [x, y + h]], getCanvasFurcationColor(values[0]));
+                drawPolygon([[x + w, y], [centerX, centerY], [centerX, y + h], [x + w, y + h]], getCanvasFurcationColor(values[1]));
+                drawPolygon([[x, y], [centerX, centerY], [x + w, y]], getCanvasFurcationColor(values[2]));
+                if (values[0]) drawText(values[0], x + w * 0.25, y + h * 0.62, 12, '800');
+                if (values[1]) drawText(values[1], x + w * 0.75, y + h * 0.62, 12, '800');
+                if (values[2]) drawText(values[2], x + w * 0.5, y + h * 0.2, 12, '800');
+                return;
+            }
+
+            if (isUpper && (tooth.id === 4 || tooth.id === 5)) {
+                drawCell(x, y, w / 2, h, getCanvasFurcationColor(values[0]), '#94a3b8');
+                drawCell(x + w / 2, y, w / 2, h, getCanvasFurcationColor(values[1]), '#94a3b8');
+                if (values[0]) drawText(values[0], x + w * 0.25, y + h / 2, 12, '800');
+                if (values[1]) drawText(values[1], x + w * 0.75, y + h / 2, 12, '800');
+                return;
+            }
+
+            if (!isUpper && tooth.id >= 6) {
+                drawCell(x, y, w, h / 2, getCanvasFurcationColor(values[0]), '#94a3b8');
+                drawCell(x, y + h / 2, w, h / 2, getCanvasFurcationColor(values[1]), '#94a3b8');
+                if (values[0]) drawText(values[0], x + w / 2, y + h * 0.25, 12, '800');
+                if (values[1]) drawText(values[1], x + w / 2, y + h * 0.75, 12, '800');
+                return;
+            }
+
+            drawCell(x, y, w, h, getCanvasFurcationColor(values[0]), '#94a3b8');
+            if (values[0]) drawText(values[0], x + w / 2, y + h / 2, 12, '800');
         };
 
         const drawToothRow = (teeth: ToothData[], y: number) => {

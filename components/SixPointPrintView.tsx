@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import { ToothData, MeasurementMethod } from '../types';
-import { FurcationInput } from './FurcationInput';
 
 interface DentalChartPrintViewProps {
   data: {
@@ -52,6 +51,63 @@ const getFurcationValues = (tooth: ToothData, count: number) => {
     : Array(count).fill(null);
 };
 
+const getFurcationFillColor = (val: string | null): string => {
+  if (val === 'Ⅰ') return '#fef9c3';
+  if (val === 'Ⅱ') return '#ffedd5';
+  if (val === 'Ⅲ') return '#fee2e2';
+  return '#ffffff';
+};
+
+const FurcationShape: React.FC<{
+  values: (string | null)[];
+  variant: 'single' | 'horizontal' | 'vertical' | 'y-shape';
+}> = ({ values, variant }) => {
+  const strokeColor = '#999999';
+  const textClass = 'font-bold text-[13px] fill-slate-800 pointer-events-none select-none';
+
+  if (variant === 'y-shape') {
+    return (
+      <svg viewBox="0 0 70 40" className="w-full h-full" preserveAspectRatio="none">
+        <polygon points="0,0 35,20 35,40 0,40" fill={getFurcationFillColor(values[0])} stroke={strokeColor} strokeWidth="1" />
+        <polygon points="70,0 35,20 35,40 70,40" fill={getFurcationFillColor(values[1])} stroke={strokeColor} strokeWidth="1" />
+        <polygon points="0,0 35,20 70,0" fill={getFurcationFillColor(values[2])} stroke={strokeColor} strokeWidth="1" />
+        {values[0] && <text x="17.5" y="25" textAnchor="middle" dominantBaseline="central" className={textClass}>{values[0]}</text>}
+        {values[1] && <text x="52.5" y="25" textAnchor="middle" dominantBaseline="central" className={textClass}>{values[1]}</text>}
+        {values[2] && <text x="35" y="8" textAnchor="middle" dominantBaseline="central" className={textClass}>{values[2]}</text>}
+      </svg>
+    );
+  }
+
+  if (variant === 'horizontal') {
+    return (
+      <svg viewBox="0 0 70 40" className="w-full h-full" preserveAspectRatio="none">
+        <rect x="0" y="0" width="70" height="20" fill={getFurcationFillColor(values[0])} stroke={strokeColor} strokeWidth="1" />
+        <rect x="0" y="20" width="70" height="20" fill={getFurcationFillColor(values[1])} stroke={strokeColor} strokeWidth="1" />
+        {values[0] && <text x="35" y="10" textAnchor="middle" dominantBaseline="central" className={textClass}>{values[0]}</text>}
+        {values[1] && <text x="35" y="30" textAnchor="middle" dominantBaseline="central" className={textClass}>{values[1]}</text>}
+      </svg>
+    );
+  }
+
+  if (variant === 'vertical') {
+    return (
+      <svg viewBox="0 0 70 40" className="w-full h-full" preserveAspectRatio="none">
+        <rect x="0" y="0" width="35" height="40" fill={getFurcationFillColor(values[0])} stroke={strokeColor} strokeWidth="1" />
+        <rect x="35" y="0" width="35" height="40" fill={getFurcationFillColor(values[1])} stroke={strokeColor} strokeWidth="1" />
+        {values[0] && <text x="17.5" y="20" textAnchor="middle" dominantBaseline="central" className={textClass}>{values[0]}</text>}
+        {values[1] && <text x="52.5" y="20" textAnchor="middle" dominantBaseline="central" className={textClass}>{values[1]}</text>}
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 70 40" className="w-full h-full" preserveAspectRatio="none">
+      <rect x="0" y="0" width="70" height="40" fill={getFurcationFillColor(values[0])} stroke={strokeColor} strokeWidth="1" />
+      {values[0] && <text x="35" y="20" textAnchor="middle" dominantBaseline="central" className={textClass}>{values[0]}</text>}
+    </svg>
+  );
+};
+
 const FurcationPrintCell: React.FC<{
   tooth: ToothData;
   isUpper: boolean;
@@ -79,13 +135,7 @@ const FurcationPrintCell: React.FC<{
       style={{ gridColumn: `span ${colSpan}` }}
     >
       <div className="w-full h-full flex items-center justify-center">
-        <FurcationInput
-          values={values}
-          onChange={() => {}}
-          variant={variant}
-          disabled={true}
-          height="h-[24px]"
-        />
+        <FurcationShape values={values} variant={variant} />
       </div>
     </div>
   );
