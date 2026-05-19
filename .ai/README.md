@@ -20,6 +20,11 @@
 - `06_regression_test.md`: 修正後の再検証項目
 - `07_efficiency_review.md`: 入力効率・操作性の検証観点
 - `08_codex_verification_prompt.md`: Codexへ検証だけを依頼するための指示文
+- `20_development_handoff_index.md`: 本開発引き継ぎ資料の目次
+- `21_requirement_definition_for_development.md`: 本開発向け要件定義書
+- `22_screen_and_workflow_spec.md`: 画面・操作フロー仕様
+- `23_data_and_business_rules.md`: データ・業務ルール仕様
+- `24_open_questions_for_development.md`: 本開発前の未決事項・確認リスト
 
 ## 推奨する使い方
 

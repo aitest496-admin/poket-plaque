@@ -442,6 +442,7 @@ const App: React.FC = () => {
     // Height Measurement for Preview Scrolling
     const previewContentRef = useRef<HTMLDivElement>(null);
     const [previewContentHeight, setPreviewContentHeight] = useState<number>(0);
+    const [isCopyingPreview, setIsCopyingPreview] = useState(false);
 
     // Pinch Zoom Refs
     const touchStartDist = useRef<number>(0);
@@ -700,6 +701,126 @@ const App: React.FC = () => {
     }, [isPreviewMode, isCompareMode, compareTargetDates]); // Re-attach if modes change heavily, though observe persists usually
 
     // --- Handlers ---
+
+    const inlineComputedStyles = (source: Element, target: Element) => {
+        const computed = window.getComputedStyle(source);
+        const targetElement = target as HTMLElement;
+
+        for (const property of Array.from(computed)) {
+            targetElement.style.setProperty(
+                property,
+                computed.getPropertyValue(property),
+                computed.getPropertyPriority(property)
+            );
+        }
+
+        Array.from(source.children).forEach((sourceChild, index) => {
+            const targetChild = target.children[index];
+            if (targetChild) {
+                inlineComputedStyles(sourceChild, targetChild);
+            }
+        });
+    };
+
+    const renderElementToPngBlob = async (element: HTMLElement): Promise<Blob> => {
+        const clone = element.cloneNode(true) as HTMLElement;
+        inlineComputedStyles(element, clone);
+
+        clone.style.transform = 'none';
+        clone.style.transformOrigin = 'top left';
+        clone.style.width = `${element.scrollWidth}px`;
+        clone.style.minWidth = `${element.scrollWidth}px`;
+        clone.style.background = '#ffffff';
+
+        const width = Math.ceil(element.scrollWidth);
+        const height = Math.ceil(element.scrollHeight);
+        const scale = 2;
+
+        const xhtml = new XMLSerializer().serializeToString(clone);
+        const svg = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+                <foreignObject width="100%" height="100%" x="0" y="0">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="background:#ffffff;width:${width}px;min-height:${height}px;">
+                        ${xhtml}
+                    </div>
+                </foreignObject>
+            </svg>
+        `;
+
+        const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+        const svgUrl = URL.createObjectURL(svgBlob);
+
+        try {
+            const image = new Image();
+            image.decoding = 'async';
+            image.src = svgUrl;
+            await image.decode();
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width * scale;
+            canvas.height = height * scale;
+
+            const context = canvas.getContext('2d');
+            if (!context) {
+                throw new Error('Canvas context is unavailable');
+            }
+
+            context.scale(scale, scale);
+            context.fillStyle = '#ffffff';
+            context.fillRect(0, 0, width, height);
+            context.drawImage(image, 0, 0, width, height);
+
+            const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+            if (!blob) {
+                throw new Error('PNG conversion failed');
+            }
+
+            return blob;
+        } finally {
+            URL.revokeObjectURL(svgUrl);
+        }
+    };
+
+    const downloadPreviewImage = (blob: Blob) => {
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `perio-chart-${selectedDate}.png`;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    };
+
+    const handleCopyPreviewImage = async () => {
+        if (!previewContentRef.current || isCopyingPreview) return;
+
+        setIsCopyingPreview(true);
+
+        try {
+            const blob = await renderElementToPngBlob(previewContentRef.current);
+
+            if ('ClipboardItem' in window && navigator.clipboard?.write) {
+                try {
+                    await navigator.clipboard.write([
+                        new ClipboardItem({ [blob.type]: blob })
+                    ]);
+                    setToast({ message: "プレビュー画像をコピーしました", type: 'success' });
+                    return;
+                } catch (clipboardError) {
+                    console.error("Clipboard write failed", clipboardError);
+                }
+            }
+
+            downloadPreviewImage(blob);
+            setToast({ message: "画像コピーに対応していないためPNGを保存しました", type: 'info' });
+        } catch (error) {
+            console.error("Failed to copy preview image", error);
+            setToast({ message: "画像の作成に失敗しました", type: 'error' });
+        } finally {
+            setIsCopyingPreview(false);
+        }
+    };
 
     const handleToothUpdate = (quadrant: Quadrant, updatedTooth: ToothData) => {
         setAllTeethData(prev => ({
@@ -1033,7 +1154,7 @@ const App: React.FC = () => {
                 >
                     {/* Global Furcation Toggle (Only for 6-point in Preview Mode) */}
                     {measurementMethod === '6-point' && !isPisaPreview && (
-                        <div className="max-w-[1100px] w-full mx-auto mt-4 px-8 flex justify-end print:hidden select-none">
+                        <div className="max-w-[1100px] w-full mx-auto mt-4 px-8 flex justify-end gap-2 print:hidden select-none">
                             <label className="flex items-center gap-1.5 text-sm font-bold text-slate-800 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm hover:bg-slate-50 transition-colors">
                                 <input
                                     type="checkbox"
@@ -1043,6 +1164,19 @@ const App: React.FC = () => {
                                 />
                                 <span>根分岐部病変を表示する</span>
                             </label>
+                            <button
+                                onPointerDown={handleCopyPreviewImage}
+                                disabled={isCopyingPreview}
+                                className="flex items-center gap-1.5 text-sm font-bold text-white bg-indigo-600 px-3 py-1.5 rounded-lg border border-indigo-700 shadow-sm hover:bg-indigo-700 active:scale-95 disabled:bg-indigo-300 disabled:border-indigo-300 disabled:active:scale-100 transition-all"
+                                title="プレビュー表を画像としてコピー"
+                                aria-label="プレビュー表を画像としてコピー"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.4} stroke="currentColor" className="w-4 h-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 7.5V6A2.25 2.25 0 0 1 10.5 3.75h7.5A2.25 2.25 0 0 1 20.25 6v7.5A2.25 2.25 0 0 1 18 15.75h-1.5" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 10.5A2.25 2.25 0 0 1 6 8.25h7.5a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-7.5Z" />
+                                </svg>
+                                <span>{isCopyingPreview ? 'コピー中' : '画像をコピー'}</span>
+                            </button>
                         </div>
                     )}
                     {/* Wrapper for scrolling: ensure min dimensions based on scaled content */}
