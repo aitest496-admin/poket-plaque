@@ -702,83 +702,292 @@ const App: React.FC = () => {
 
     // --- Handlers ---
 
-    const inlineComputedStyles = (source: Element, target: Element) => {
-        const computed = window.getComputedStyle(source);
-        const targetElement = target as HTMLElement;
-
-        for (const property of Array.from(computed)) {
-            targetElement.style.setProperty(
-                property,
-                computed.getPropertyValue(property),
-                computed.getPropertyPriority(property)
-            );
+    const getPreviewConfig = (method: MeasurementMethod) => {
+        switch (method) {
+            case '1-point':
+                return { indices: [1], showLingual: false, pointsPerTooth: 1, colsTotal: 16 };
+            case '4-point':
+                return { indices: [0, 2], showLingual: true, pointsPerTooth: 2, colsTotal: 32 };
+            case '6-point':
+            default:
+                return { indices: [0, 1, 2], showLingual: true, pointsPerTooth: 3, colsTotal: 48 };
         }
-
-        Array.from(source.children).forEach((sourceChild, index) => {
-            const targetChild = target.children[index];
-            if (targetChild) {
-                inlineComputedStyles(sourceChild, targetChild);
-            }
-        });
     };
 
-    const renderElementToPngBlob = async (element: HTMLElement): Promise<Blob> => {
-        const clone = element.cloneNode(true) as HTMLElement;
-        inlineComputedStyles(element, clone);
+    const getPreviewStats = (
+        data: { UL: ToothData[]; UR: ToothData[]; LL: ToothData[]; LR: ToothData[] },
+        method: MeasurementMethod
+    ) => {
+        const config = getPreviewConfig(method);
+        let plaqueSurfaces = 0;
+        let totalPlaqueSurfaces = 0;
+        let bleedingPoints = 0;
+        let totalBleedingPoints = 0;
 
-        clone.style.transform = 'none';
-        clone.style.transformOrigin = 'top left';
-        clone.style.width = `${element.scrollWidth}px`;
-        clone.style.minWidth = `${element.scrollWidth}px`;
-        clone.style.background = '#ffffff';
+        [...data.UR, ...data.UL, ...data.LR, ...data.LL].forEach((tooth) => {
+            if (tooth.isMissing) return;
 
-        const width = Math.ceil(element.scrollWidth);
-        const height = Math.ceil(element.scrollHeight);
+            if (tooth.plaque.mesial) plaqueSurfaces++;
+            if (tooth.plaque.distal) plaqueSurfaces++;
+            if (tooth.plaque.buccal) plaqueSurfaces++;
+            if (tooth.plaque.lingual) plaqueSurfaces++;
+            totalPlaqueSurfaces += 4;
+
+            config.indices.forEach((idx) => {
+                if (tooth.bleeding.buccal[idx]) bleedingPoints++;
+                totalBleedingPoints++;
+            });
+
+            if (config.showLingual) {
+                config.indices.forEach((idx) => {
+                    if (tooth.bleeding.lingual[idx]) bleedingPoints++;
+                    totalBleedingPoints++;
+                });
+            }
+        });
+
+        return {
+            pcr: totalPlaqueSurfaces > 0 ? ((plaqueSurfaces / totalPlaqueSurfaces) * 100).toFixed(1) : '0.0',
+            bop: totalBleedingPoints > 0 ? ((bleedingPoints / totalBleedingPoints) * 100).toFixed(1) : '0.0',
+        };
+    };
+
+    const getCanvasDepthColor = (depth: number | null) => {
+        if (depth === null) return '#ffffff';
+        if (depth >= 10) return '#ff4d4d';
+        if (depth >= 7) return '#ffc0cb';
+        if (depth >= 4) return '#ffff00';
+        return '#ffffff';
+    };
+
+    const createPreviewImageBlob = async (): Promise<Blob> => {
+        const entries = [
+            { date: selectedDate, data: allTeethData[measurementMethod], examiner: selectedExaminer, comparisonLabel: '' },
+            ...(isCompareMode ? compareTargetDates.flatMap((date) => {
+                const record = comparisonData[date];
+                if (!record) return [];
+                return [{
+                    date,
+                    data: record.data[measurementMethod],
+                    examiner: record.examinerId ? {
+                        id: record.examinerId,
+                        name: record.examinerName || '',
+                        color: record.examinerColor || 'bg-slate-500',
+                    } : undefined,
+                    comparisonLabel: `過去データ: ${date.replace(/-/g, '/')}`,
+                }];
+            }) : []),
+        ];
+
+        const config = getPreviewConfig(measurementMethod);
+        const logicalWidth = 1100;
+        const margin = 32;
+        const labelWidth = 56;
+        const headerHeight = 54;
+        const toothRowHeight = 28;
+        const footerHeight = 34;
+        const rowHeight = 28;
+        const smallRowHeight = 16;
+        const gap = 44;
+        const showFurcationRows = measurementMethod === '6-point' && showFurcation;
+        const upperRows = (showFurcationRows ? [rowHeight] : [])
+            .concat([rowHeight, rowHeight, smallRowHeight, rowHeight])
+            .concat(config.showLingual ? [rowHeight, smallRowHeight] : []);
+        const lowerRows = (config.showLingual ? [smallRowHeight, rowHeight] : [])
+            .concat([rowHeight, smallRowHeight, rowHeight, rowHeight])
+            .concat(showFurcationRows ? [rowHeight] : []);
+        const chartHeight = headerHeight + upperRows.reduce((sum, value) => sum + value, 0) + toothRowHeight + lowerRows.reduce((sum, value) => sum + value, 0) + footerHeight;
+        const logicalHeight = margin * 2 + entries.length * chartHeight + Math.max(0, entries.length - 1) * gap;
         const scale = 2;
+        const canvas = document.createElement('canvas');
+        canvas.width = logicalWidth * scale;
+        canvas.height = logicalHeight * scale;
 
-        const xhtml = new XMLSerializer().serializeToString(clone);
-        const svg = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-                <foreignObject width="100%" height="100%" x="0" y="0">
-                    <div xmlns="http://www.w3.org/1999/xhtml" style="background:#ffffff;width:${width}px;min-height:${height}px;">
-                        ${xhtml}
-                    </div>
-                </foreignObject>
-            </svg>
-        `;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Canvas context is unavailable');
 
-        const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-        const svgUrl = URL.createObjectURL(svgBlob);
+        ctx.scale(scale, scale);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, logicalWidth, logicalHeight);
+        ctx.textBaseline = 'middle';
 
-        try {
-            const image = new Image();
-            image.decoding = 'async';
-            image.src = svgUrl;
-            await image.decode();
+        const drawText = (text: string, x: number, y: number, size = 11, weight = '600', color = '#0f172a', align: CanvasTextAlign = 'center') => {
+            ctx.fillStyle = color;
+            ctx.font = `${weight} ${size}px sans-serif`;
+            ctx.textAlign = align;
+            ctx.fillText(text, x, y);
+        };
 
-            const canvas = document.createElement('canvas');
-            canvas.width = width * scale;
-            canvas.height = height * scale;
+        const drawCell = (x: number, y: number, w: number, h: number, fill = '#ffffff', stroke = '#1e293b') => {
+            ctx.fillStyle = fill;
+            ctx.fillRect(x, y, w, h);
+            ctx.strokeStyle = stroke;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, w, h);
+        };
 
-            const context = canvas.getContext('2d');
-            if (!context) {
-                throw new Error('Canvas context is unavailable');
+        const drawPlaque = (tooth: ToothData, x: number, y: number, w: number, h: number) => {
+            drawCell(x, y, w, h, tooth.isMissing ? '#cbd5e1' : '#ffffff');
+            if (tooth.isMissing) return;
+            const cx = x + w / 2;
+            const cy = y + h / 2;
+            const active = '#ef4444';
+            const paths: Array<[boolean, Array<[number, number]>]> = [
+                [tooth.plaque.buccal, [[x, y], [x + w, y], [cx, cy]]],
+                [tooth.plaque.lingual, [[x, y + h], [x + w, y + h], [cx, cy]]],
+                [tooth.plaque.mesial, [[x, y], [x, y + h], [cx, cy]]],
+                [tooth.plaque.distal, [[x + w, y], [x + w, y + h], [cx, cy]]],
+            ];
+            paths.forEach(([isActive, points]) => {
+                if (!isActive) return;
+                ctx.beginPath();
+                ctx.moveTo(points[0][0], points[0][1]);
+                points.slice(1).forEach(([px, py]) => ctx.lineTo(px, py));
+                ctx.closePath();
+                ctx.fillStyle = active;
+                ctx.fill();
+            });
+            ctx.strokeStyle = '#1e293b';
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + w, y + h);
+            ctx.moveTo(x + w, y);
+            ctx.lineTo(x, y + h);
+            ctx.stroke();
+        };
+
+        const drawMeasureCells = (tooth: ToothData, side: 'buccal' | 'lingual', x: number, y: number, w: number, h: number) => {
+            const cellWidth = w / config.indices.length;
+            config.indices.forEach((idx, i) => {
+                const depth = tooth.pocketDepth[side][idx];
+                const cellX = x + i * cellWidth;
+                drawCell(cellX, y, cellWidth, h, tooth.isMissing ? '#cbd5e1' : getCanvasDepthColor(depth));
+                if (!tooth.isMissing && depth !== null) {
+                    drawText(String(depth), cellX + cellWidth / 2, y + h / 2, 12, '700', depth >= 10 ? '#ffffff' : '#0f172a');
+                }
+            });
+        };
+
+        const drawBleedingPusCells = (tooth: ToothData, side: 'buccal' | 'lingual', x: number, y: number, w: number, h: number) => {
+            const cellWidth = w / config.indices.length;
+            config.indices.forEach((idx, i) => {
+                const cellX = x + i * cellWidth;
+                drawCell(cellX, y, cellWidth, h, tooth.isMissing ? '#cbd5e1' : '#ffffff');
+                if (tooth.isMissing) return;
+                const bleeding = tooth.bleeding[side][idx];
+                const pus = tooth.pus[side][idx];
+                if (bleeding && pus) {
+                    drawCell(cellX, y, cellWidth / 2, h, '#ff4d4d');
+                    drawCell(cellX + cellWidth / 2, y, cellWidth / 2, h, '#808080');
+                } else if (bleeding) {
+                    drawCell(cellX, y, cellWidth, h, '#ff4d4d');
+                } else if (pus) {
+                    drawCell(cellX, y, cellWidth, h, '#808080');
+                }
+            });
+        };
+
+        const drawFurcation = (tooth: ToothData, isUpper: boolean, x: number, y: number, w: number, h: number) => {
+            drawCell(x, y, w, h, tooth.isMissing ? '#cbd5e1' : '#ffffff');
+            if (tooth.isMissing) return;
+            const count = isUpper ? (tooth.id >= 6 ? 3 : tooth.id >= 4 ? 2 : 1) : (tooth.id >= 6 ? 2 : 1);
+            const values = tooth.furcation && tooth.furcation.length === count ? tooth.furcation : Array(count).fill(null);
+            const cellWidth = w / count;
+            values.forEach((value, index) => {
+                if (index > 0) {
+                    ctx.strokeStyle = '#94a3b8';
+                    ctx.beginPath();
+                    ctx.moveTo(x + index * cellWidth, y);
+                    ctx.lineTo(x + index * cellWidth, y + h);
+                    ctx.stroke();
+                }
+                if (value) drawText(value, x + index * cellWidth + cellWidth / 2, y + h / 2, 12, '800');
+            });
+        };
+
+        const drawToothRow = (teeth: ToothData[], y: number) => {
+            drawCell(margin, y, labelWidth, toothRowHeight, '#f1f5f9');
+            drawText('部位', margin + labelWidth / 2, y + toothRowHeight / 2, 11, '800');
+            const toothWidth = (logicalWidth - margin * 2 - labelWidth) / 16;
+            teeth.forEach((tooth, i) => {
+                const x = margin + labelWidth + i * toothWidth;
+                drawCell(x, y, toothWidth, toothRowHeight, tooth.isMissing ? '#0f172a' : tooth.isPrimary ? '#16a34a' : '#f8fafc');
+                drawText(String(tooth.isPrimary ? ['A', 'B', 'C', 'D', 'E'][tooth.id - 1] ?? tooth.id : tooth.id), x + toothWidth / 2, y + toothRowHeight / 2, 14, '800', tooth.isMissing || tooth.isPrimary ? '#ffffff' : '#0f172a');
+            });
+        };
+
+        const drawRows = (teeth: ToothData[], isUpper: boolean, y: number, rowDefs: Array<{ label: string; height: number; render: (tooth: ToothData, x: number, y: number, w: number, h: number) => void }>) => {
+            const pointWidth = (logicalWidth - margin * 2 - labelWidth) / config.colsTotal;
+            rowDefs.forEach((row) => {
+                drawCell(margin, y, labelWidth, row.height, '#ffffff');
+                drawText(row.label, margin + labelWidth / 2, y + row.height / 2, row.label.length > 4 ? 9 : 10, '800');
+                teeth.forEach((tooth, i) => {
+                    const x = margin + labelWidth + i * pointWidth * config.pointsPerTooth;
+                    row.render(tooth, x, y, pointWidth * config.pointsPerTooth, row.height);
+                    if (i === 7) {
+                        ctx.strokeStyle = '#0f172a';
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        ctx.moveTo(x + pointWidth * config.pointsPerTooth, y);
+                        ctx.lineTo(x + pointWidth * config.pointsPerTooth, y + row.height);
+                        ctx.stroke();
+                        ctx.lineWidth = 1;
+                    }
+                });
+                y += row.height;
+            });
+            return y;
+        };
+
+        let y = margin;
+        entries.forEach((entry) => {
+            const stats = getPreviewStats(entry.data, measurementMethod);
+            const upperTeeth = [...entry.data.UR, ...entry.data.UL];
+            const lowerTeeth = [...entry.data.LR, ...entry.data.LL];
+
+            if (entry.comparisonLabel) {
+                drawText(entry.comparisonLabel, margin, y - 14, 13, '800', '#4f46e5', 'left');
             }
 
-            context.scale(scale, scale);
-            context.fillStyle = '#ffffff';
-            context.fillRect(0, 0, width, height);
-            context.drawImage(image, 0, 0, width, height);
+            drawText(`歯周精密検査表 (${measurementMethod === '1-point' ? '1点法' : measurementMethod === '4-point' ? '4点法' : '6点法'})`, margin, y + 18, 20, '800', '#0f172a', 'left');
+            drawText(`実施者: ${entry.examiner?.name || '担当無し'}   検査日 ${entry.date.replace(/-/g, '.')}   PCR ${stats.pcr}%`, logicalWidth - margin, y + 18, 13, '800', '#0f172a', 'right');
+            y += headerHeight;
 
-            const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
-            if (!blob) {
-                throw new Error('PNG conversion failed');
-            }
+            const upperDefs = [
+                ...(showFurcationRows ? [{ label: '根分岐部', height: rowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawFurcation(tooth, true, x, yy, w, h) }] : []),
+                { label: 'プラーク', height: rowHeight, render: drawPlaque },
+                { label: '動揺度', height: rowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => { drawCell(x, yy, w, h, tooth.isMissing ? '#cbd5e1' : '#ffffff'); if (!tooth.isMissing && tooth.mobility > 0) drawText(String(tooth.mobility), x + w / 2, yy + h / 2, 12, '800'); } },
+                { label: '出血・排膿', height: smallRowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawBleedingPusCells(tooth, 'buccal', x, yy, w, h) },
+                { label: 'ポケット', height: rowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawMeasureCells(tooth, 'buccal', x, yy, w, h) },
+                ...(config.showLingual ? [
+                    { label: 'ポケット', height: rowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawMeasureCells(tooth, 'lingual', x, yy, w, h) },
+                    { label: '出血・排膿', height: smallRowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawBleedingPusCells(tooth, 'lingual', x, yy, w, h) },
+                ] : []),
+            ];
+            y = drawRows(upperTeeth, true, y, upperDefs);
+            drawToothRow(upperTeeth, y);
+            y += toothRowHeight;
 
-            return blob;
-        } finally {
-            URL.revokeObjectURL(svgUrl);
-        }
+            const lowerDefs = [
+                ...(config.showLingual ? [
+                    { label: '出血・排膿', height: smallRowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawBleedingPusCells(tooth, 'lingual', x, yy, w, h) },
+                    { label: 'ポケット', height: rowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawMeasureCells(tooth, 'lingual', x, yy, w, h) },
+                ] : []),
+                { label: 'ポケット', height: rowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawMeasureCells(tooth, 'buccal', x, yy, w, h) },
+                { label: '出血・排膿', height: smallRowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawBleedingPusCells(tooth, 'buccal', x, yy, w, h) },
+                { label: '動揺度', height: rowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => { drawCell(x, yy, w, h, tooth.isMissing ? '#cbd5e1' : '#ffffff'); if (!tooth.isMissing && tooth.mobility > 0) drawText(String(tooth.mobility), x + w / 2, yy + h / 2, 12, '800'); } },
+                { label: 'プラーク', height: rowHeight, render: drawPlaque },
+                ...(showFurcationRows ? [{ label: '根分岐部', height: rowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawFurcation(tooth, false, x, yy, w, h) }] : []),
+            ];
+            y = drawRows(lowerTeeth, false, y, lowerDefs);
+
+            drawText(`出血: 赤   排膿: 灰   BOP ${stats.bop}%   プロービング: 4-6mm(黄) 7mm以上(桃/赤)`, margin, y + 18, 11, '700', '#334155', 'left');
+            y += footerHeight + gap;
+        });
+
+        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+        if (!blob) throw new Error('PNG conversion failed');
+        return blob;
     };
 
     const downloadPreviewImage = (blob: Blob) => {
@@ -798,12 +1007,12 @@ const App: React.FC = () => {
         setIsCopyingPreview(true);
 
         try {
-            const blob = await renderElementToPngBlob(previewContentRef.current);
+            const blobPromise = createPreviewImageBlob();
 
             if ('ClipboardItem' in window && navigator.clipboard?.write) {
                 try {
                     await navigator.clipboard.write([
-                        new ClipboardItem({ [blob.type]: blob })
+                        new ClipboardItem({ 'image/png': blobPromise })
                     ]);
                     setToast({ message: "プレビュー画像をコピーしました", type: 'success' });
                     return;
@@ -812,6 +1021,7 @@ const App: React.FC = () => {
                 }
             }
 
+            const blob = await blobPromise;
             downloadPreviewImage(blob);
             setToast({ message: "画像コピーに対応していないためPNGを保存しました", type: 'info' });
         } catch (error) {
@@ -1152,18 +1362,20 @@ const App: React.FC = () => {
                     onTouchMove={handleTouchMove}
                     onTouchEnd={() => { touchStartDist.current = 0; }}
                 >
-                    {/* Global Furcation Toggle (Only for 6-point in Preview Mode) */}
-                    {measurementMethod === '6-point' && !isPisaPreview && (
+                    {/* Preview chart tools */}
+                    {!isPisaPreview && (
                         <div className="max-w-[1100px] w-full mx-auto mt-4 px-8 flex justify-end gap-2 print:hidden select-none">
-                            <label className="flex items-center gap-1.5 text-sm font-bold text-slate-800 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm hover:bg-slate-50 transition-colors">
-                                <input
-                                    type="checkbox"
-                                    checked={showFurcation}
-                                    onChange={(e) => setShowFurcation(e.target.checked)}
-                                    className="w-4 h-4 rounded border-slate-400 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                                />
-                                <span>根分岐部病変を表示する</span>
-                            </label>
+                            {measurementMethod === '6-point' && (
+                                <label className="flex items-center gap-1.5 text-sm font-bold text-slate-800 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm hover:bg-slate-50 transition-colors">
+                                    <input
+                                        type="checkbox"
+                                        checked={showFurcation}
+                                        onChange={(e) => setShowFurcation(e.target.checked)}
+                                        className="w-4 h-4 rounded border-slate-400 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                    />
+                                    <span>根分岐部病変を表示する</span>
+                                </label>
+                            )}
                             <button
                                 onPointerDown={handleCopyPreviewImage}
                                 disabled={isCopyingPreview}
