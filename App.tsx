@@ -171,7 +171,7 @@ const MiniMap: React.FC<{ current: Quadrant; onSelect: (q: Quadrant) => void; di
           ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
           ${rounded}
         `}
-                aria-label={`View ${label}`}
+                aria-label={`${label}を表示`}
                 title={label}
             >
                 {japaneseLabel[q]}
@@ -1377,7 +1377,7 @@ const App: React.FC = () => {
         <button
             onPointerDown={currentQuadrant.startsWith('U') ? goDown : goUp}
             className={`w-10 h-10 flex items-center justify-center bg-red-500 text-white rounded-md shadow-md hover:bg-red-600 active:bg-red-700 transition-all duration-300`}
-            aria-label={currentQuadrant.startsWith('U') ? "Go Down" : "Go Up"}
+            aria-label={currentQuadrant.startsWith('U') ? "下顎へ移動" : "上顎へ移動"}
         >
             {currentQuadrant.startsWith('U') ? (
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-6 h-6">
@@ -1532,7 +1532,7 @@ const App: React.FC = () => {
                             onPointerDown={goLeft}
                             disabled={!showLeftControls}
                             className={`w-10 h-24 flex items-center justify-center bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700 active:bg-blue-800 transition-opacity duration-300 ${showLeftControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                            aria-label="Go Left"
+                            aria-label="左へ移動"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-6 h-6">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -1635,7 +1635,7 @@ const App: React.FC = () => {
                             onPointerDown={goRight}
                             disabled={!showRightControls}
                             className={`w-10 h-24 flex items-center justify-center bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700 active:bg-blue-800 transition-opacity duration-300 ${showRightControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                            aria-label="Go Right"
+                            aria-label="右へ移動"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-6 h-6">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
