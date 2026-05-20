@@ -25,32 +25,32 @@ export const analyzeDentalChart = async (teeth: ToothData[]): Promise<string> =>
     );
 
     if (activeTeeth.length === 0) {
-      return "No significant findings recorded in the chart.";
+      return "チャートに特筆すべき所見は記録されていません。";
     }
 
     const prompt = `
-    You are an expert Periodontist. Analyze the following raw JSON data representing a patient's 6-point periodontal chart.
+    あなたは優秀な歯周病専門医です。患者の6点法歯周組織検査チャートを表す以下の生のJSONデータを分析してください。
     
-    Data Structure Legend:
-    - id: Tooth number (1-8)
-    - mobility: 0-3 scale
-    - plaque: boolean for 5 surfaces
-    - bleeding (BOP): { buccal: [D,C,M], lingual: [D,C,M] }
-    - pus: { buccal: [D,C,M], lingual: [D,C,M] }
-    - pocketDepth: { buccal: [D,C,M], lingual: [D,C,M] } (Values in mm)
+    データ構造凡例:
+    - id: 歯番号 (1-8)
+    - mobility: 動揺度 (0-3の尺度)
+    - plaque: プラーク (5面におけるboolean)
+    - bleeding (BOP): 出血 { buccal: [遠心, 中央, 近心], lingual: [遠心, 中央, 近心] }
+    - pus: 排膿 { buccal: [遠心, 中央, 近心], lingual: [遠心, 中央, 近心] }
+    - pocketDepth: ポケット深さ { buccal: [遠心, 中央, 近心], lingual: [遠心, 中央, 近心] } (単位: mm)
 
-    Patient Data (Active findings only):
+    患者データ (所見のある部位のみ):
     ${JSON.stringify(activeTeeth, null, 2)}
 
-    Task:
-    Provide a concise clinical summary suitable for medical notes. 
-    1. Summarize extent of disease (General vs Localized).
-    2. Note deepest pockets specifying site (e.g., Tooth #3 DL 8mm).
-    3. Note teeth with bleeding/pus.
-    4. Categorize Periodontitis severity.
-    5. Recommend next steps.
+    タスク:
+    カルテや紹介状に適した、簡潔な日本語の臨床サマリーを提供してください。
+    1. 病変の広がり（全顎的 vs 局所的）を要約する。
+    2. 最も深いポケットのある部位を特定して記載する（例：右上3番 遠心頬側 8mm）。
+    3. 出血・排膿がみられる歯を特定する。
+    4. 歯周炎の重症度を分類する。
+    5. 次の治療ステップ（TBI、スケーリング、ルートプレーニング、外科処置の検討など）を提案する。
 
-    Format: Use Markdown. Be professional, concise, and standard dental terminology.
+    フォーマット: Markdownを使用してください。プロフェッショナルで簡潔な、標準的な歯科医療用語を使用してください。回答はすべて日本語で記述してください。
     `;
 
     const response = await ai.models.generateContent({
@@ -58,10 +58,10 @@ export const analyzeDentalChart = async (teeth: ToothData[]): Promise<string> =>
       contents: prompt,
     });
 
-    return response.text || "Unable to generate analysis.";
+    return response.text || "分析結果を生成できませんでした。";
 
   } catch (error) {
     console.error("Gemini Analysis Failed:", error);
-    return "Error connecting to AI service. Please check your API configuration.";
+    return "AIサービスへの接続エラーが発生しました。API設定を確認してください。";
   }
 };
