@@ -430,6 +430,7 @@ const App: React.FC = () => {
     const [isPreviewMode, setIsPreviewMode] = useState(false);
     const [isPisaPreview, setIsPisaPreview] = useState(false); // PISA Preview toggle
     const [showFurcation, setShowFurcation] = useState(false); // Global Furcation involvement visibility state
+    const [previewPlaqueMode, setPreviewPlaqueMode] = useState<'all' | 'plaque-only' | 'plaque-none'>('all');
     const [isCompareMode, setIsCompareMode] = useState(false); // Comparison Mode State
     const [isCompareListOpen, setIsCompareListOpen] = useState(false); // Date Selection Modal for Compare
 
@@ -796,14 +797,23 @@ const App: React.FC = () => {
         const rowHeight = 28;
         const smallRowHeight = 16;
         const gap = 44;
-        const showFurcationRows = measurementMethod === '6-point' && showFurcation;
-        const upperRows = (showFurcationRows ? [rowHeight] : [])
-            .concat([rowHeight, rowHeight, smallRowHeight, rowHeight])
-            .concat(config.showLingual ? [rowHeight, smallRowHeight] : []);
-        const lowerRows = (config.showLingual ? [smallRowHeight, rowHeight] : [])
-            .concat([rowHeight, smallRowHeight, rowHeight, rowHeight])
-            .concat(showFurcationRows ? [rowHeight] : []);
-        const chartHeight = headerHeight + upperRows.reduce((sum, value) => sum + value, 0) + toothRowHeight + lowerRows.reduce((sum, value) => sum + value, 0) + footerHeight;
+        const isPlaqueOnly = previewPlaqueMode === 'plaque-only';
+        const isPlaqueHidden = previewPlaqueMode === 'plaque-none';
+        const showFurcationRows = measurementMethod === '6-point' && showFurcation && !isPlaqueOnly;
+        const upperRows = isPlaqueOnly
+            ? [rowHeight]
+            : (showFurcationRows ? [rowHeight] : [])
+                .concat(isPlaqueHidden ? [] : [rowHeight])
+                .concat([rowHeight, smallRowHeight, rowHeight])
+                .concat(config.showLingual ? [rowHeight, smallRowHeight] : []);
+        const lowerRows = isPlaqueOnly
+            ? [rowHeight]
+            : (config.showLingual ? [smallRowHeight, rowHeight] : [])
+                .concat([rowHeight, smallRowHeight, rowHeight])
+                .concat(isPlaqueHidden ? [] : [rowHeight])
+                .concat(showFurcationRows ? [rowHeight] : []);
+        const chartFooterHeight = isPlaqueOnly ? 0 : footerHeight;
+        const chartHeight = headerHeight + upperRows.reduce((sum, value) => sum + value, 0) + toothRowHeight + lowerRows.reduce((sum, value) => sum + value, 0) + chartFooterHeight;
         const logicalHeight = margin * 2 + entries.length * chartHeight + Math.max(0, entries.length - 1) * gap;
         const scale = 2;
         const canvas = document.createElement('canvas');
@@ -988,40 +998,50 @@ const App: React.FC = () => {
                 drawText(entry.comparisonLabel, margin, y - 14, 13, '800', '#4f46e5', 'left');
             }
 
-            drawText(`歯周精密検査表 (${measurementMethod === '1-point' ? '1点法' : measurementMethod === '4-point' ? '4点法' : '6点法'})`, margin, y + 18, 20, '800', '#0f172a', 'left');
-            drawText(`実施者: ${entry.examiner?.name || '担当無し'}   検査日 ${entry.date.replace(/-/g, '.')}   PCR ${stats.pcr}%`, logicalWidth - margin, y + 18, 13, '800', '#0f172a', 'right');
+            const chartTitle = measurementMethod === '1-point'
+                ? '歯周基本検査表'
+                : `歯周精密検査表 (${measurementMethod === '4-point' ? '4点法' : '6点法'})`;
+            drawText(chartTitle, margin, y + 18, 20, '800', '#0f172a', 'left');
+            const headerMeta = `実施者: ${entry.examiner?.name || '担当無し'}   検査日 ${entry.date.replace(/-/g, '.')}${isPlaqueHidden ? '' : `   PCR ${stats.pcr}%`}`;
+            drawText(headerMeta, logicalWidth - margin, y + 18, 13, '800', '#0f172a', 'right');
             y += headerHeight;
 
             const upperDefs = [
                 ...(showFurcationRows ? [{ label: '根分岐部', height: rowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawFurcation(tooth, true, x, yy, w, h) }] : []),
-                { label: 'プラーク', height: rowHeight, render: drawPlaque },
-                { label: '動揺度', height: rowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => { drawCell(x, yy, w, h, tooth.isMissing ? '#cbd5e1' : '#ffffff'); if (!tooth.isMissing && tooth.mobility > 0) drawText(String(tooth.mobility), x + w / 2, yy + h / 2, 12, '800'); } },
-                { label: '出血・排膿', height: smallRowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawBleedingPusCells(tooth, 'buccal', x, yy, w, h) },
-                { label: 'ポケット', height: rowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawMeasureCells(tooth, 'buccal', x, yy, w, h) },
-                ...(config.showLingual ? [
-                    { label: 'ポケット', height: rowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawMeasureCells(tooth, 'lingual', x, yy, w, h) },
-                    { label: '出血・排膿', height: smallRowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawBleedingPusCells(tooth, 'lingual', x, yy, w, h) },
-                ] : []),
+                ...(isPlaqueHidden ? [] : [{ label: 'プラーク', height: rowHeight, render: drawPlaque }]),
+                ...(isPlaqueOnly ? [] : [
+                    { label: '動揺度', height: rowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => { drawCell(x, yy, w, h, tooth.isMissing ? '#cbd5e1' : '#ffffff'); if (!tooth.isMissing && tooth.mobility > 0) drawText(String(tooth.mobility), x + w / 2, yy + h / 2, 12, '800'); } },
+                    { label: '出血・排膿', height: smallRowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawBleedingPusCells(tooth, 'buccal', x, yy, w, h) },
+                    { label: 'ポケット', height: rowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawMeasureCells(tooth, 'buccal', x, yy, w, h) },
+                    ...(config.showLingual ? [
+                        { label: 'ポケット', height: rowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawMeasureCells(tooth, 'lingual', x, yy, w, h) },
+                        { label: '出血・排膿', height: smallRowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawBleedingPusCells(tooth, 'lingual', x, yy, w, h) },
+                    ] : []),
+                ]),
             ];
             y = drawRows(upperTeeth, true, y, upperDefs);
             drawToothRow(upperTeeth, y);
             y += toothRowHeight;
 
             const lowerDefs = [
-                ...(config.showLingual ? [
+                ...(isPlaqueOnly ? [] : config.showLingual ? [
                     { label: '出血・排膿', height: smallRowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawBleedingPusCells(tooth, 'lingual', x, yy, w, h) },
                     { label: 'ポケット', height: rowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawMeasureCells(tooth, 'lingual', x, yy, w, h) },
                 ] : []),
-                { label: 'ポケット', height: rowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawMeasureCells(tooth, 'buccal', x, yy, w, h) },
-                { label: '出血・排膿', height: smallRowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawBleedingPusCells(tooth, 'buccal', x, yy, w, h) },
-                { label: '動揺度', height: rowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => { drawCell(x, yy, w, h, tooth.isMissing ? '#cbd5e1' : '#ffffff'); if (!tooth.isMissing && tooth.mobility > 0) drawText(String(tooth.mobility), x + w / 2, yy + h / 2, 12, '800'); } },
-                { label: 'プラーク', height: rowHeight, render: drawPlaque },
+                ...(isPlaqueOnly ? [] : [
+                    { label: 'ポケット', height: rowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawMeasureCells(tooth, 'buccal', x, yy, w, h) },
+                    { label: '出血・排膿', height: smallRowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawBleedingPusCells(tooth, 'buccal', x, yy, w, h) },
+                    { label: '動揺度', height: rowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => { drawCell(x, yy, w, h, tooth.isMissing ? '#cbd5e1' : '#ffffff'); if (!tooth.isMissing && tooth.mobility > 0) drawText(String(tooth.mobility), x + w / 2, yy + h / 2, 12, '800'); } },
+                ]),
+                ...(isPlaqueHidden ? [] : [{ label: 'プラーク', height: rowHeight, render: drawPlaque }]),
                 ...(showFurcationRows ? [{ label: '根分岐部', height: rowHeight, render: (tooth: ToothData, x: number, yy: number, w: number, h: number) => drawFurcation(tooth, false, x, yy, w, h) }] : []),
             ];
             y = drawRows(lowerTeeth, false, y, lowerDefs);
 
-            drawText(`出血: 赤   排膿: 灰   BOP ${stats.bop}%   プロービング: 4-6mm(黄) 7mm以上(桃/赤)`, margin, y + 18, 11, '700', '#334155', 'left');
-            y += footerHeight + gap;
+            if (!isPlaqueOnly) {
+                drawText(`出血: 赤   排膿: 灰   BOP ${stats.bop}%   プロービング: 4-6mm(黄) 7mm以上(桃/赤)`, margin, y + 18, 11, '700', '#334155', 'left');
+            }
+            y += chartFooterHeight + gap;
         });
 
         const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
@@ -1403,7 +1423,27 @@ const App: React.FC = () => {
                 >
                     {/* Preview chart tools */}
                     {!isPisaPreview && (
-                        <div className="max-w-[1100px] w-full mx-auto mt-4 px-8 flex justify-end gap-2 print:hidden select-none">
+                        <div className="max-w-[1100px] w-full mx-auto mt-4 px-8 flex flex-wrap justify-end gap-2 print:hidden select-none">
+                            <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
+                                <label className="flex items-center gap-1.5 text-sm font-bold text-slate-800 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={previewPlaqueMode === 'plaque-only'}
+                                        onChange={(e) => setPreviewPlaqueMode(e.target.checked ? 'plaque-only' : 'all')}
+                                        className="w-4 h-4 rounded border-slate-400 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                    />
+                                    <span>プラークのみ</span>
+                                </label>
+                                <label className="flex items-center gap-1.5 text-sm font-bold text-slate-800 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={previewPlaqueMode === 'plaque-none'}
+                                        onChange={(e) => setPreviewPlaqueMode(e.target.checked ? 'plaque-none' : 'all')}
+                                        className="w-4 h-4 rounded border-slate-400 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                    />
+                                    <span>プラークなし</span>
+                                </label>
+                            </div>
                             {measurementMethod === '6-point' && (
                                 <label className="flex items-center gap-1.5 text-sm font-bold text-slate-800 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm hover:bg-slate-50 transition-colors">
                                     <input
@@ -1464,6 +1504,7 @@ const App: React.FC = () => {
                                         method={measurementMethod}
                                         examiner={selectedExaminer}
                                         showFurcation={showFurcation}
+                                        plaqueViewMode={previewPlaqueMode}
                                     />
                                 )}
                             </div>
@@ -1509,6 +1550,7 @@ const App: React.FC = () => {
                                                     method={measurementMethod}
                                                     examiner={recordExaminer}
                                                     showFurcation={showFurcation}
+                                                    plaqueViewMode={previewPlaqueMode}
                                                 />
                                             )}
                                         </div>
@@ -1722,7 +1764,7 @@ const App: React.FC = () => {
                                 className={`p-2 border rounded-lg shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center ${isPreviewMode ? 'bg-slate-800 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200'}`}
                                 onPointerDown={() => {
                                     if (isPreviewMode) {
-                                        setIsPreviewMode(false); setIsPisaPreview(false); setShowFurcation(false); setIsCompareMode(false); setCompareTargetDates([]); setZoomLevel(0.7); setPreviewContentHeight(0);
+                                        setIsPreviewMode(false); setIsPisaPreview(false); setShowFurcation(false); setPreviewPlaqueMode('all'); setIsCompareMode(false); setCompareTargetDates([]); setZoomLevel(0.7); setPreviewContentHeight(0);
                                     } else {
                                         if (isDirty) setIsSaveConfirmModalOpen(true); else setIsPreviewMode(true);
                                     }

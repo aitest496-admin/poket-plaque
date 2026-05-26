@@ -12,6 +12,7 @@ interface DentalChartPrintViewProps {
   method: MeasurementMethod;
   examiner?: { id: string; name: string; color: string };
   showFurcation?: boolean;
+  plaqueViewMode?: 'all' | 'plaque-only' | 'plaque-none';
 }
 
 const formatToothId = (id: number, isPrimary?: boolean) => {
@@ -242,9 +243,11 @@ const MeasurementCells: React.FC<{ tooth: ToothData, side: 'buccal' | 'lingual',
   );
 };
 
-const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date, method, examiner, showFurcation = false }) => {
+const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date, method, examiner, showFurcation = false, plaqueViewMode = 'all' }) => {
   const upperTeeth = [...data.UR, ...data.UL];
   const lowerTeeth = [...data.LR, ...data.LL];
+  const isPlaqueOnly = plaqueViewMode === 'plaque-only';
+  const isPlaqueHidden = plaqueViewMode === 'plaque-none';
 
   // Config based on method
   const config = useMemo(() => {
@@ -329,6 +332,9 @@ const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date,
   }, [upperTeeth, lowerTeeth, config]);
 
   const labelClass = "bg-white font-bold text-[10px] tracking-tighter flex items-center justify-center h-full w-full shrink-0 border-r border-b border-slate-800 print:border-black whitespace-nowrap overflow-hidden";
+  const title = method === '1-point'
+    ? '歯周基本検査表'
+    : `歯周精密検査表 (${method === '4-point' ? '4点法' : '6点法'})`;
 
   // Dynamic grid columns
   const gridStyle = {
@@ -340,11 +346,11 @@ const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date,
       
       {/* Header */}
       <div className="flex justify-between items-end mb-4 border-b-2 border-slate-800 pb-2">
-        <h1 className="text-xl font-bold">歯周精密検査表 ({method === '1-point' ? '1点法' : method === '4-point' ? '4点法' : '6点法'})</h1>
+        <h1 className="text-xl font-bold">{title}</h1>
         <div className="flex gap-8 text-sm font-bold">
             {examiner && <div>実施者: {examiner.name}</div>}
             <div>検査日 {date.replace(/-/g, '.')}</div>
-            <div>PCR {stats.pcr}%</div>
+            {!isPlaqueHidden && <div>PCR {stats.pcr}%</div>}
         </div>
       </div>
 
@@ -356,7 +362,7 @@ const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date,
         {/* UPPER JAW */}
         <div className="grid" style={gridStyle}>
              {/* Row 0: Furcation (Upper) */}
-             {method === '6-point' && showFurcation && (
+             {!isPlaqueOnly && method === '6-point' && showFurcation && (
                <>
                  <div className={`${labelClass}`}>根分岐部</div>
                  {upperTeeth.map((t, i) => (
@@ -373,23 +379,39 @@ const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date,
              )}
 
              {/* Row 1: Plaque */}
-             <div className={`${labelClass}`}>プラーク</div>
-             {upperTeeth.map((t, i) => <PlaqueCell key={t.id} tooth={t} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === upperTeeth.length - 1} />)}
+             {!isPlaqueHidden && (
+               <>
+                 <div className={`${labelClass}`}>プラーク</div>
+                 {upperTeeth.map((t, i) => <PlaqueCell key={t.id} tooth={t} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === upperTeeth.length - 1} />)}
+               </>
+             )}
 
              {/* Row 2: Mobility */}
-             <div className={`${labelClass}`} style={{ gridColumn: '1 / 2' }}>動揺度</div>
-             {upperTeeth.map((t, i) => <MobilityCell key={t.id} tooth={t} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === upperTeeth.length - 1} />)}
+             {!isPlaqueOnly && (
+               <>
+                 <div className={`${labelClass}`} style={{ gridColumn: '1 / 2' }}>動揺度</div>
+                 {upperTeeth.map((t, i) => <MobilityCell key={t.id} tooth={t} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === upperTeeth.length - 1} />)}
+               </>
+             )}
 
              {/* Row 3: Bleeding/Pus (Buccal) */}
-             <div className={`${labelClass} !text-[8px]`} style={{ gridColumn: '1 / 2' }}>出血・排膿</div>
-             {upperTeeth.map((t, i) => <BleedingPusCells key={t.id} tooth={t} side="buccal" indices={config.indices} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === upperTeeth.length - 1} />)}
+             {!isPlaqueOnly && (
+               <>
+                 <div className={`${labelClass} !text-[8px]`} style={{ gridColumn: '1 / 2' }}>出血・排膿</div>
+                 {upperTeeth.map((t, i) => <BleedingPusCells key={t.id} tooth={t} side="buccal" indices={config.indices} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === upperTeeth.length - 1} />)}
+               </>
+             )}
 
              {/* Row 4: Buccal Pocket */}
-             <div className={`${labelClass}`} style={{ gridColumn: '1 / 2' }}>ポケット</div>
-             {upperTeeth.map((t, i) => <MeasurementCells key={t.id} tooth={t} side="buccal" indices={config.indices} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === upperTeeth.length - 1} />)}
+             {!isPlaqueOnly && (
+               <>
+                 <div className={`${labelClass}`} style={{ gridColumn: '1 / 2' }}>ポケット</div>
+                 {upperTeeth.map((t, i) => <MeasurementCells key={t.id} tooth={t} side="buccal" indices={config.indices} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === upperTeeth.length - 1} />)}
+               </>
+             )}
 
              {/* Row 5 & 6: Lingual (Conditional) */}
-             {config.showLingual && (
+             {!isPlaqueOnly && config.showLingual && (
                 <>
                     <div className={`${labelClass}`} style={{ gridColumn: '1 / 2' }}>ポケット</div>
                     {upperTeeth.map((t, i) => <MeasurementCells key={t.id} tooth={t} side="lingual" indices={config.indices} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === upperTeeth.length - 1} />)}
@@ -413,7 +435,7 @@ const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date,
         {/* LOWER JAW */}
         <div className="grid" style={gridStyle}>
              {/* Row 1 & 2: Lingual (Conditional) */}
-             {config.showLingual && (
+             {!isPlaqueOnly && config.showLingual && (
                 <>
                     <div className={`${labelClass} !text-[8px]`} style={{ gridColumn: '1 / 2' }}>出血・排膿</div>
                     {lowerTeeth.map((t, i) => <BleedingPusCells key={t.id} tooth={t} side="lingual" indices={config.indices} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === lowerTeeth.length - 1} />)}
@@ -424,32 +446,48 @@ const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date,
              )}
 
              {/* Row 3: Buccal Pocket */}
-             <div className={`${labelClass}`} style={{ gridColumn: '1 / 2' }}>ポケット</div>
-             {lowerTeeth.map((t, i) => <MeasurementCells key={t.id} tooth={t} side="buccal" indices={config.indices} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === lowerTeeth.length - 1} />)}
+             {!isPlaqueOnly && (
+               <>
+                 <div className={`${labelClass}`} style={{ gridColumn: '1 / 2' }}>ポケット</div>
+                 {lowerTeeth.map((t, i) => <MeasurementCells key={t.id} tooth={t} side="buccal" indices={config.indices} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === lowerTeeth.length - 1} />)}
+               </>
+             )}
 
              {/* Row 4: Bleeding/Pus (Buccal) */}
-             <div className={`${labelClass} !text-[8px]`} style={{ gridColumn: '1 / 2' }}>出血・排膿</div>
-             {lowerTeeth.map((t, i) => <BleedingPusCells key={t.id} tooth={t} side="buccal" indices={config.indices} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === lowerTeeth.length - 1} />)}
+             {!isPlaqueOnly && (
+               <>
+                 <div className={`${labelClass} !text-[8px]`} style={{ gridColumn: '1 / 2' }}>出血・排膿</div>
+                 {lowerTeeth.map((t, i) => <BleedingPusCells key={t.id} tooth={t} side="buccal" indices={config.indices} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === lowerTeeth.length - 1} />)}
+               </>
+             )}
 
              {/* Row 5: Mobility */}
-             <div className={`${labelClass}`} style={{ gridColumn: '1 / 2' }}>動揺度</div>
-             {lowerTeeth.map((t, i) => <MobilityCell key={t.id} tooth={t} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === lowerTeeth.length - 1} />)}
+             {!isPlaqueOnly && (
+               <>
+                 <div className={`${labelClass}`} style={{ gridColumn: '1 / 2' }}>動揺度</div>
+                 {lowerTeeth.map((t, i) => <MobilityCell key={t.id} tooth={t} colSpan={config.colSpan} isCenterSeparator={i === 7} isLastTooth={i === lowerTeeth.length - 1} />)}
+               </>
+             )}
 
              {/* Row 6: Plaque */}
-             <div className={`${labelClass} ${method === '6-point' && showFurcation ? '' : '!border-b-0'}`} style={{ gridColumn: '1 / 2' }}>プラーク</div>
-             {lowerTeeth.map((t, i) => (
-               <PlaqueCell
-                 key={t.id}
-                 tooth={t}
-                 colSpan={config.colSpan}
-                 isCenterSeparator={i === 7}
-                 isLastTooth={i === lowerTeeth.length - 1}
-                 isLastRow={!(method === '6-point' && showFurcation)}
-               />
-             ))}
+             {!isPlaqueHidden && (
+               <>
+                 <div className={`${labelClass} ${isPlaqueOnly || !(method === '6-point' && showFurcation) ? '!border-b-0' : ''}`} style={{ gridColumn: '1 / 2' }}>プラーク</div>
+                 {lowerTeeth.map((t, i) => (
+                   <PlaqueCell
+                     key={t.id}
+                     tooth={t}
+                     colSpan={config.colSpan}
+                     isCenterSeparator={i === 7}
+                     isLastTooth={i === lowerTeeth.length - 1}
+                     isLastRow={isPlaqueOnly || !(method === '6-point' && showFurcation)}
+                   />
+                 ))}
+               </>
+             )}
 
              {/* Row 7: Furcation (Lower) */}
-             {method === '6-point' && showFurcation && (
+             {!isPlaqueOnly && method === '6-point' && showFurcation && (
                <>
                  <div className={`${labelClass} !border-b-0`}>根分岐部</div>
                  {lowerTeeth.map((t, i) => (
@@ -470,20 +508,22 @@ const DentalChartPrintView: React.FC<DentalChartPrintViewProps> = ({ data, date,
       </div>
 
       {/* Legend Footer */}
-      <div className="mt-2 flex gap-4 text-[10px] items-center border border-slate-800 p-1 bg-white">
-        <div className="flex items-center gap-1"><div className="w-3 h-3 bg-[#ff4d4d] border border-black"></div> 出血</div>
-        <div className="flex items-center gap-1"><div className="w-3 h-3 bg-[#808080] border border-black"></div> 排膿</div>
-        <div className="flex items-center gap-1"><div className="w-3 h-3 flex"><div className="w-1.5 bg-[#ff4d4d]"></div><div className="w-1.5 bg-[#808080]"></div></div> 出血+排膿</div>
-        <div className="flex items-center gap-1"><div className="w-3 h-3 bg-green-600 border border-black"></div> 乳歯</div>
-        
-        <div className="font-bold ml-2">BOP {stats.bop}%</div>
+      {!isPlaqueOnly && (
+        <div className="mt-2 flex gap-4 text-[10px] items-center border border-slate-800 p-1 bg-white">
+          <div className="flex items-center gap-1"><div className="w-3 h-3 bg-[#ff4d4d] border border-black"></div> 出血</div>
+          <div className="flex items-center gap-1"><div className="w-3 h-3 bg-[#808080] border border-black"></div> 排膿</div>
+          <div className="flex items-center gap-1"><div className="w-3 h-3 flex"><div className="w-1.5 bg-[#ff4d4d]"></div><div className="w-1.5 bg-[#808080]"></div></div> 出血+排膿</div>
+          <div className="flex items-center gap-1"><div className="w-3 h-3 bg-green-600 border border-black"></div> 乳歯</div>
+          
+          <div className="font-bold ml-2">BOP {stats.bop}%</div>
 
-        <div className="ml-auto flex gap-4">
-            <span>プロービング: ~3mm(白)</span>
-            <span>4~6mm(黄)</span>
-            <span>7mm~(桃/赤)</span>
+          <div className="ml-auto flex gap-4">
+              <span>プロービング: ~3mm(白)</span>
+              <span>4~6mm(黄)</span>
+              <span>7mm~(桃/赤)</span>
+          </div>
         </div>
-      </div>
+      )}
 
     </div>
   );
