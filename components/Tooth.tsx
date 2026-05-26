@@ -44,9 +44,8 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
     });
   };
 
-  const handleMobilityChange = (delta: number) => {
-    const newVal = Math.min(3, Math.max(0, data.mobility + delta));
-    onUpdate({ ...data, mobility: newVal });
+  const handleMobilitySelect = (value: 1 | 2 | 3) => {
+    onUpdate({ ...data, mobility: data.mobility === value ? 0 : value });
   };
 
   const getCellCount = (id: number, isUpper: boolean): 1 | 2 | 3 => {
@@ -148,12 +147,40 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
   const isLarge = !is1Point;
   const toothWidthClass = is1Point ? 'min-w-[28px] max-w-[45px]' : 'flex-1 min-w-[70px]';
   const mobilityRowHeight = isLarge ? 'h-[28px]' : 'h-[24px]';
-  const mobilityTextSize = isLarge ? 'text-[14px]' : 'text-[12px]';
   const toothIdTextSize = isLarge ? 'text-[16px]' : 'text-[12px]';
   const toothIdPadding = isLarge ? 'py-[2px]' : 'py-[2px]';
   const toothIdHeight = isLarge ? 'h-[52px]' : 'h-[30px]';
 
-  const mobilityBtnClass = `${is1Point ? 'w-[12px] text-[10px]' : 'w-[24px] text-[20px]'} h-full leading-none font-bold flex items-center justify-center text-gray-500 hover:text-black hover:bg-gray-200 rounded`;
+  const renderMobilityToggle = (
+    currentValue: number,
+    onSelect: (value: 1 | 2 | 3) => void,
+    borderClass: string
+  ) => (
+    <div className={`${mobilityRowHeight} grid grid-cols-3 bg-slate-50 ${borderClass}`}>
+      {([1, 2, 3] as const).map((value) => {
+        const isActive = currentValue === value;
+        return (
+          <button
+            key={value}
+            type="button"
+            onPointerDown={() => onSelect(value)}
+            className={`
+              h-full min-w-0 flex items-center justify-center border-r last:border-r-0 border-slate-200
+              text-[11px] md:text-[12px] font-black leading-none transition-colors active:scale-95
+              ${isActive
+                ? 'bg-blue-600 text-white shadow-inner'
+                : 'bg-white text-slate-500 hover:bg-blue-50 hover:text-blue-700'}
+            `}
+            aria-pressed={isActive}
+            aria-label={`動揺度${value}`}
+            title={`動揺度${value}`}
+          >
+            {value}
+          </button>
+        );
+      })}
+    </div>
+  );
 
   // Missing Overlay Component
   const MissingOverlay = () => (
@@ -194,9 +221,8 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
       onUpdateLower({ ...lowerData, plaque: { ...lowerData.plaque, [surface]: isActive } });
     };
 
-    const handleLowerMobilityChange = (delta: number) => {
-      const newVal = Math.min(3, Math.max(0, lowerData.mobility + delta));
-      onUpdateLower({ ...lowerData, mobility: newVal });
+    const handleLowerMobilitySelect = (value: 1 | 2 | 3) => {
+      onUpdateLower({ ...lowerData, mobility: lowerData.mobility === value ? 0 : value });
     };
 
     return (
@@ -214,11 +240,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
             />
           </div>
           {/* Mobility (Upper) */}
-          <div className={`${mobilityRowHeight} flex items-center justify-between px-1 bg-[#fafafa] border-b border-[#ccc]`}>
-            <button className={mobilityBtnClass} onPointerDown={() => handleMobilityChange(-1)}>-</button>
-            <span className={`${mobilityTextSize} font-bold flex-1 text-center`}>{data.mobility}</span>
-            <button className={mobilityBtnClass} onPointerDown={() => handleMobilityChange(1)}>+</button>
-          </div>
+          {renderMobilityToggle(data.mobility, handleMobilitySelect, 'border-b border-[#ccc]')}
           {/* Measurements (Upper Buccal) */}
           {/* Pus -> Bleeding -> Chart (15..1) | Inverted=false puts 1 at bottom */}
           <ThreePointToggle type="pus" values={data.pus.buccal} onChange={(idx, val) => updateMeasurement('pus', 'buccal', idx, val)} singlePoint={true} />
@@ -281,11 +303,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
           <ThreePointToggle type="pus" values={lowerData.pus.buccal} onChange={(idx, val) => updateLower('pus', 'buccal', idx, val)} singlePoint={true} />
 
           {/* Mobility (Lower) */}
-          <div className={`${mobilityRowHeight} flex items-center justify-between px-1 bg-[#fafafa] border-t border-[#ccc]`}>
-            <button className={mobilityBtnClass} onPointerDown={() => handleLowerMobilityChange(-1)}>-</button>
-            <span className={`${mobilityTextSize} font-bold flex-1 text-center`}>{lowerData.mobility}</span>
-            <button className={mobilityBtnClass} onPointerDown={() => handleLowerMobilityChange(1)}>+</button>
-          </div>
+          {renderMobilityToggle(lowerData.mobility, handleLowerMobilitySelect, 'border-t border-[#ccc]')}
           {/* Plaque Diagram (Lower) */}
           <div className="border-t border-[#ccc] w-full">
             <PlaqueDiagram
@@ -322,11 +340,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
             </div>
 
             {/* 2. Mobility (Next to Pus) */}
-            <div className={`${mobilityRowHeight} flex items-center justify-between px-1 bg-[#fafafa] border-b border-[#ccc]`}>
-              <button className={mobilityBtnClass} onPointerDown={() => handleMobilityChange(-1)}>-</button>
-              <span className={`${mobilityTextSize} font-bold flex-1 text-center`}>{data.mobility}</span>
-              <button className={mobilityBtnClass} onPointerDown={() => handleMobilityChange(1)}>+</button>
-            </div>
+            {renderMobilityToggle(data.mobility, handleMobilitySelect, 'border-b border-[#ccc]')}
 
             {/* 3. Pus (Buccal) - 2 Points */}
             <ThreePointToggle type="pus" values={data.pus.buccal} onChange={(idx, val) => updateMeasurement('pus', 'buccal', idx, val)} displayPoints={points4} />
@@ -421,11 +435,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
             <ThreePointToggle type="pus" values={data.pus.buccal} onChange={(idx, val) => updateMeasurement('pus', 'buccal', idx, val)} displayPoints={points4} />
 
             {/* 4. Mobility */}
-            <div className={`${mobilityRowHeight} flex items-center justify-between px-1 bg-[#fafafa] border-t border-[#ccc]`}>
-              <button className={mobilityBtnClass} onPointerDown={() => handleMobilityChange(-1)}>-</button>
-              <span className={`${mobilityTextSize} font-bold flex-1 text-center`}>{data.mobility}</span>
-              <button className={mobilityBtnClass} onPointerDown={() => handleMobilityChange(1)}>+</button>
-            </div>
+            {renderMobilityToggle(data.mobility, handleMobilitySelect, 'border-t border-[#ccc]')}
 
             {/* 5. Plaque */}
             <div className={`border-t border-[#ccc] w-full ${isLarge ? 'h-[70px]' : ''}`}>
@@ -477,17 +487,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
               variant="simple"
             />
           </div>
-          <div className={`${mobilityRowHeight} flex items-center justify-between px-1 bg-[#fafafa] border-b border-[#ccc]`}>
-            <button
-              className={mobilityBtnClass}
-              onPointerDown={() => handleMobilityChange(-1)}
-            >-</button>
-            <span className={`${mobilityTextSize} font-bold flex-1 text-center`}>{data.mobility}</span>
-            <button
-              className={mobilityBtnClass}
-              onPointerDown={() => handleMobilityChange(1)}
-            >+</button>
-          </div>
+          {renderMobilityToggle(data.mobility, handleMobilitySelect, 'border-b border-[#ccc]')}
         </>
       )}
 
@@ -518,17 +518,7 @@ const Tooth: React.FC<ToothProps> = ({ data, lowerData, onUpdate, onUpdateLower,
 
       {jaw === 'lower' && (
         <>
-          <div className={`${mobilityRowHeight} flex items-center justify-between px-1 bg-[#fafafa] border-t border-[#ccc]`}>
-            <button
-              className={mobilityBtnClass}
-              onPointerDown={() => handleMobilityChange(-1)}
-            >-</button>
-            <span className={`${mobilityTextSize} font-bold flex-1 text-center`}>{data.mobility}</span>
-            <button
-              className={mobilityBtnClass}
-              onPointerDown={() => handleMobilityChange(1)}
-            >+</button>
-          </div>
+          {renderMobilityToggle(data.mobility, handleMobilitySelect, 'border-t border-[#ccc]')}
           <div className={`border-t border-[#ccc] w-full ${isLarge ? 'h-[70px]' : ''}`}>
             <PlaqueDiagram
               value={data.plaque}
