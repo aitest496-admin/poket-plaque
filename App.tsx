@@ -1690,9 +1690,9 @@ const App: React.FC = () => {
 
                 <div className="flex-1 h-full overflow-hidden relative border border-slate-200 bg-slate-50 rounded-lg shadow-inner">
                     {measurementMethod === '1-point' ? (
-                        <div className="w-full min-h-full overflow-auto p-2 flex items-start justify-center touch-none select-none">
-                            <div className="flex justify-center gap-1">
-                                <div className="flex gap-[1px] bg-white p-0 rounded border border-slate-300 shadow-sm">
+                        <div className="w-full min-h-full overflow-auto px-1 py-2 flex items-start justify-center touch-none select-none">
+                            <div className="flex justify-center gap-1 w-full max-w-[1120px]">
+                                <div className="flex flex-1 min-w-0 gap-[1px] bg-white p-0 rounded border border-slate-300 shadow-sm">
                                     {currentTeethData.UR.map((tooth, index) => (
                                         <Tooth
                                             key={tooth.id}
@@ -1706,7 +1706,7 @@ const App: React.FC = () => {
                                     ))}
                                 </div>
                                 <div className="w-2 shrink-0"></div>
-                                <div className="flex gap-[1px] bg-white p-0 rounded border border-slate-300 shadow-sm">
+                                <div className="flex flex-1 min-w-0 gap-[1px] bg-white p-0 rounded border border-slate-300 shadow-sm">
                                     {currentTeethData.UL.map((tooth, index) => (
                                         <Tooth
                                             key={tooth.id}
