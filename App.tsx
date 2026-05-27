@@ -1800,72 +1800,77 @@ const App: React.FC = () => {
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
             {/* Header - Compact (Hidden on print) */}
-            <header className="bg-white shadow-sm border-b border-slate-200 px-4 py-1 sticky top-0 z-50 shrink-0 print:hidden">
-                {/* Patient Info Row & Execution Time */}
-                <div className="max-w-full mx-auto mb-1 px-1 flex justify-between items-center">
-                    <div className="flex items-center gap-3 text-sm">
+            <header className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50 shrink-0 print:hidden">
+                <div className="px-4 py-3 flex items-center justify-between gap-4 border-b border-slate-100">
+                    <div className="flex items-center gap-3 min-w-[260px]">
                         <div className="flex flex-col">
-                            <span className="font-mono font-bold text-slate-400 text-xs leading-tight">000000001</span>
-                            <div className="flex items-center gap-1.5">
-                                <span className="font-black text-slate-800 text-xl leading-none">吉田 太郎</span>
-                                <span className="text-slate-400 font-bold text-sm">様</span>
+                            <span className="font-mono font-bold text-slate-400 text-sm leading-tight">000000001</span>
+                            <div className="flex items-center gap-2">
+                                <span className="font-black text-slate-800 text-2xl leading-none">吉田 太郎</span>
+                                <span className="text-slate-400 font-bold text-base">様</span>
+                                <button
+                                    onPointerDown={() => setIsSettingsOpen(true)}
+                                    className="ml-1 p-1.5 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 shadow-sm active:scale-95 transition-all flex items-center justify-center outline-none"
+                                    title="設定"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774a1.125 1.125 0 0 1 .12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.894.15c.542.09.94.56.94 1.109v1.094c0 .55-.398 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738a1.125 1.125 0 0 1-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.45.12l-.737-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.02-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527a1.125 1.125 0 0 1-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.764-.383.929-.78.165-.398.143-.854-.107-1.204l-.527-.738a1.125 1.125 0 0 1 .12-1.45l.774-.773a1.125 1.125 0 0 1 1.45-.12l.738.527c.35.25.806.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                    </svg>
+                                </button>
                             </div>
+                            <span className="text-slate-500 text-sm font-bold mt-1">（1975/01/01　51歳）</span>
                         </div>
-                        <span className="text-slate-500 text-sm font-bold ml-1">（1975/01/01　51歳）</span>
                     </div>
 
-                    {/* Execution Time Controls & Preview Toggle */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3 justify-center flex-1">
+                        <button
+                            onPointerDown={() => !isPreviewMode && !isCompareMode && setIsCalendarOpen(true)}
+                            disabled={isPreviewMode || isCompareMode}
+                            className={`h-12 bg-white border border-slate-200 rounded-lg px-4 text-lg font-black text-slate-800 shadow-sm flex items-center gap-3 hover:bg-slate-50 active:bg-slate-100 transition-colors ${isPreviewMode || isCompareMode ? 'opacity-70 pointer-events-none' : ''}`}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-6 h-6 text-slate-700">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                            </svg>
+                            {selectedDate.replace(/-/g, '/')}
+                        </button>
+
                         {!isPreviewMode && !isCompareMode && (
-                            <div className={`
-                                flex items-center gap-1 p-1 rounded-xl border shadow-sm transition-all duration-300
-                                ${totalMinutes >= 15 
-                                    ? 'bg-slate-50 border-slate-200' 
-                                    : 'bg-orange-50 border-orange-200 animate-pulse-slow'}
-                            `}>
-                                {/* Requirement 2: Set Now Button */}
-                                <button 
-                                    onPointerDown={handleNowClick} 
-                                    className="px-3 py-1 bg-white border border-slate-200 rounded-lg shadow-sm text-slate-700 text-[11px] font-bold hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 active:scale-95 transition-all"
-                                >
-                                    今
-                                </button>
-                                
-                                <div className="flex items-center gap-1 px-1">
-                                    <input 
-                                        type="time" 
-                                        value={startTime} 
-                                        onChange={(e) => handleStartTimeChange(e.target.value)} 
-                                        className="bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 w-[80px] text-center" 
-                                    />
-                                    <span className="text-slate-400 font-medium">〜</span>
-                                    <input 
-                                        type="time" 
-                                        value={endTime} 
-                                        onChange={(e) => handleEndTimeChange(e.target.value)} 
-                                        className="bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 w-[80px] text-center" 
-                                    />
-                                </div>
-
-                                <div className="flex items-center gap-1 mr-1">
-                                    <span className={`text-[13px] font-black ${totalMinutes < 15 ? 'text-orange-700' : 'text-slate-700'}`}>
-                                        {totalMinutes}分
-                                    </span>
-                                </div>
-
-                                {/* Requirement 2: Quick Add Button */}
-                                <button 
-                                    onPointerDown={handleAdd5Min} 
-                                    className="px-2 py-1 bg-white border border-slate-200 rounded-lg shadow-sm text-slate-700 text-[11px] font-bold hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-600 active:scale-95 transition-all"
-                                >
-                                    +5分
-                                </button>
-                            </div>
+                            <button
+                                onPointerDown={handleLoadLatestHistory}
+                                className="h-12 px-4 bg-white border border-slate-200 rounded-lg text-slate-800 shadow-sm active:scale-95 transition-all flex items-center gap-3 text-lg font-black"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                </svg>
+                                履歴
+                            </button>
                         )}
 
+                        {!isPreviewMode && !isCompareMode && (
+                            <div className={`
+                                h-12 flex items-center gap-3 px-4 rounded-lg border shadow-sm transition-all duration-300
+                                ${totalMinutes >= 15 
+                                    ? 'bg-white border-slate-200' 
+                                    : 'bg-orange-50 border-orange-200 animate-pulse-slow'}
+                            `}>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-slate-800">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                </svg>
+                                <button onPointerDown={handleNowClick} className="px-2 py-1 bg-white border border-slate-200 rounded-md text-xs font-bold text-slate-700 shadow-sm active:scale-95 transition-all">今</button>
+                                <input type="time" value={startTime} onChange={(e) => handleStartTimeChange(e.target.value)} className="bg-transparent border-none focus:ring-0 text-lg font-black text-slate-800 w-[82px] text-center p-0" />
+                                <span className="text-slate-500 text-xl font-black">〜</span>
+                                <input type="time" value={endTime} onChange={(e) => handleEndTimeChange(e.target.value)} className="bg-transparent border-none focus:ring-0 text-lg font-black text-slate-800 w-[82px] text-center p-0" />
+                                <span className={`text-lg font-black ${totalMinutes < 15 ? 'text-orange-700' : 'text-slate-800'}`}>{totalMinutes}分</span>
+                                <button onPointerDown={handleAdd5Min} className="px-3 py-1 bg-white border border-slate-200 rounded-md shadow-sm text-blue-600 text-lg font-black hover:bg-blue-50 active:scale-95 transition-all">+5分</button>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="flex items-center gap-3 justify-end min-w-[150px]">
                         <WithTooltip label={isPreviewMode ? "閉じる" : "プレビュー"} showLabels={showLabels}>
                             <button
-                                className={`p-2 border rounded-lg shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center ${isPreviewMode ? 'bg-slate-800 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200'}`}
+                                className={`w-12 h-12 border rounded-lg shadow-sm active:scale-95 transition-all flex items-center justify-center ${isPreviewMode ? 'bg-slate-800 text-white border-slate-900' : 'bg-white text-slate-800 border-slate-200'}`}
                                 onPointerDown={() => {
                                     if (isPreviewMode) {
                                         setIsPreviewMode(false); setIsPisaPreview(false); setShowFurcation(false); setPreviewPlaqueMode('all'); setIsCompareMode(false); setCompareTargetDates([]); setZoomLevel(0.7); setPreviewContentHeight(0);
@@ -1875,78 +1880,55 @@ const App: React.FC = () => {
                                 }}
                             >
                                 {isPreviewMode ? (
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                                 ) : (
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.4} stroke="currentColor" className="w-7 h-7"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
                                 )}
                             </button>
                         </WithTooltip>
 
-                        {/* Examiner Icon Button (Moved to Right Side) */}
                         <WithTooltip label={`実施者: ${selectedExaminer.name}`} showLabels={showLabels}>
-                            <button 
+                            <button
                                 onPointerDown={() => setIsExaminerModalOpen(true)}
-                                className={`
-                                    w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-xs shadow-md active:scale-95 transition-all border-2 border-white
-                                    ${selectedExaminer.color}
-                                `}
+                                className={`w-14 h-14 rounded-full flex items-center justify-center text-white font-black text-base shadow-md active:scale-95 transition-all border-2 border-white ${selectedExaminer.color}`}
                             >
                                 {getExaminerShortLabel(selectedExaminer)}
                             </button>
                         </WithTooltip>
                     </div>
-
                 </div>
-                {/* Controls Row */}
-                {/* Controls Row - Improved for iPad balance */}
-                <div className="max-w-full mx-auto flex items-center justify-between gap-3 px-1">
+
+                <div className="px-4 py-3 flex items-center justify-between gap-4">
                     {/* Left Group */}
-                    <div className="flex items-center gap-2 shrink-0 flex-1 justify-start">
-                        <button
-                            onPointerDown={() => setIsSettingsOpen(true)}
-                            className="p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center outline-none"
-                            title="設定"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774a1.125 1.125 0 0 1 .12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.894.15c.542.09.94.56.94 1.109v1.094c0 .55-.398 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738a1.125 1.125 0 0 1-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.45.12l-.737-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.02-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527a1.125 1.125 0 0 1-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.764-.383.929-.78.165-.398.143-.854-.107-1.204l-.527-.738a1.125 1.125 0 0 1 .12-1.45l.774-.773a1.125 1.125 0 0 1 1.45-.12l.738.527c.35.25.806.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                            </svg>
-                        </button>
+                    <div className="flex items-center gap-4 shrink-0">
                         <MethodSelector current={measurementMethod} onChange={(m) => { setMeasurementMethod(m); if (m !== '6-point') setIsPisaPreview(false); }} />
                         <div className={`${measurementMethod === '1-point' || isPreviewMode || isCompareMode ? 'hidden' : 'block'}`}>
                             <MiniMap current={currentQuadrant} onSelect={setCurrentQuadrant} />
                         </div>
-                    </div>
-
-                    {/* Center Group */}
-                    <div className="flex items-center gap-2 justify-center shrink-0">
-                        <button
-                            onPointerDown={() => !isPreviewMode && !isCompareMode && setIsCalendarOpen(true)}
-                            disabled={isPreviewMode || isCompareMode}
-                            className={`bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-700 shadow-inner flex items-center gap-2 hover:bg-white active:bg-slate-100 transition-colors h-9 ${isPreviewMode || isCompareMode ? 'opacity-70 pointer-events-none' : ''}`}
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-slate-500">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
-                            </svg>
-                            {selectedDate.replace(/-/g, '/')}
-                        </button>
                         {!isPreviewMode && !isCompareMode && (
-                            <WithTooltip label="直近の履歴" showLabels={showLabels}>
-                                <button
-                                    onPointerDown={handleLoadLatestHistory}
-                                    className="p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-amber-600 hover:border-amber-200 hover:bg-amber-50 shadow-sm active:scale-95 transition-all h-9 flex items-center justify-center gap-1"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                    </svg>
-                                    <span className="text-xs font-bold">履歴</span>
-                                </button>
-                            </WithTooltip>
+                            <div className="flex items-center gap-3">
+                                <span className="text-base font-black text-slate-600 whitespace-nowrap">一括入力</span>
+                                <div className="flex items-center gap-2">
+                                    {([1, 2, 3, 4, 5] as const).map(value => (
+                                        <button
+                                            key={value}
+                                            onPointerDown={() => handleBulkPocketDepth(value)}
+                                            className="h-12 w-12 rounded-lg bg-white border border-slate-200 text-slate-800 text-xl font-black shadow-sm hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 active:scale-95 transition-all"
+                                            title={`全顎のポケットに${value}mmを入力`}
+                                        >
+                                            {value}
+                                        </button>
+                                    ))}
+                                    <div className="w-px h-9 bg-slate-200 mx-1" />
+                                    <button onPointerDown={() => handleBulkToggleMeasurement('plaque')} className="h-12 px-5 rounded-lg bg-white border border-slate-200 text-rose-600 text-lg font-black shadow-sm hover:bg-rose-50 hover:border-rose-200 active:scale-95 transition-all" title="全顎のプラークをON/OFF">プラーク</button>
+                                    <button onPointerDown={() => handleBulkToggleMeasurement('bleeding')} className="h-12 px-5 rounded-lg bg-white border border-slate-200 text-red-600 text-lg font-black shadow-sm hover:bg-red-50 hover:border-red-200 active:scale-95 transition-all" title="全顎の出血をON/OFF">出血</button>
+                                    <button onPointerDown={() => handleBulkToggleMeasurement('pus')} className="h-12 px-5 rounded-lg bg-white border border-slate-200 text-slate-800 text-lg font-black shadow-sm hover:bg-slate-100 hover:border-slate-300 active:scale-95 transition-all" title="全顎の排膿をON/OFF">排膿</button>
+                                </div>
+                            </div>
                         )}
                     </div>
 
-                    {/* Right Group */}
-                    <div className="flex items-center gap-2 shrink-0 flex-1 justify-end">
+                    <div className="flex items-center gap-4 shrink-0">
                         {(isPreviewMode || isCompareMode) && (
                             <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-0.5 shadow-sm h-9">
                                 <button onPointerDown={handleZoomOut} className="w-8 h-full flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded active:bg-slate-200 transition-colors font-bold text-lg leading-none pb-1" title="縮小">−</button>
@@ -1972,77 +1954,40 @@ const App: React.FC = () => {
                         )}
                         {/* Bulk Status (Edit Mode only) */}
                         {!isPreviewMode && !isCompareMode && (
-                            <div className="flex items-center gap-1">
+                            <div className="flex flex-col gap-1 bg-teal-50 border border-teal-200 rounded-lg px-3 py-2 shadow-sm">
+                                <span className="text-sm font-black text-teal-700 leading-none">歯牙状態</span>
+                                <div className="flex items-center gap-2">
                                 <WithTooltip label="全顎欠損" showLabels={showLabels}>
-                                    <button onPointerDown={() => handleBulkStatusChange('all_missing')} className="h-9 px-2 text-[10px] font-bold bg-white text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 shadow-sm transition-colors">欠損</button>
+                                    <button onPointerDown={() => handleBulkStatusChange('all_missing')} className="h-10 px-4 text-sm font-black bg-white text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 shadow-sm transition-colors">欠損</button>
                                 </WithTooltip>
                                 <WithTooltip label="全顎乳歯" showLabels={showLabels}>
-                                    <button onPointerDown={() => handleBulkStatusChange('all_primary')} className="h-9 px-2 text-[10px] font-bold bg-white text-green-600 border border-slate-200 rounded-lg hover:bg-green-50 shadow-sm transition-colors">乳歯</button>
+                                    <button onPointerDown={() => handleBulkStatusChange('all_primary')} className="h-10 px-4 text-sm font-black bg-white text-green-600 border border-slate-200 rounded-lg hover:bg-green-50 shadow-sm transition-colors">乳歯</button>
                                 </WithTooltip>
                                 <WithTooltip label="全て永久歯に戻す" showLabels={showLabels}>
-                                    <button onPointerDown={() => handleBulkStatusChange('reset')} className="h-9 px-2 text-[10px] font-bold bg-white text-blue-600 border border-slate-200 rounded-lg hover:bg-blue-50 shadow-sm transition-colors">戻す</button>
+                                    <button onPointerDown={() => handleBulkStatusChange('reset')} className="h-10 px-4 text-sm font-black bg-white text-teal-600 border border-slate-200 rounded-lg hover:bg-teal-50 shadow-sm transition-colors">状態解除</button>
                                 </WithTooltip>
+                                </div>
                             </div>
                         )}
-
-
-
                         {!isPreviewMode && (
                             <WithTooltip label="保存" showLabels={showLabels}>
-                                <button className="p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-blue-600 h-9 flex items-center justify-center shadow-sm active:scale-95 transition-all" onPointerDown={() => handleSave()}>
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" /></svg>
+                                <button className="h-12 px-5 bg-white border border-slate-200 rounded-lg text-slate-800 hover:text-blue-600 flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-all text-lg font-black" onPointerDown={() => handleSave()}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" /></svg>
+                                    保存
                                 </button>
                             </WithTooltip>
                         )}
 
                         {!isPreviewMode && (
                             <WithTooltip label="リセット / 削除" showLabels={showLabels}>
-                                <button className="p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-red-600 h-9 flex items-center justify-center shadow-sm active:scale-95 transition-all" onPointerDown={() => setIsDeleteModalOpen(true)}>
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673A2.25 2.25 0 0 1 15.916 21.75H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                                <button className="h-12 px-5 bg-white border border-slate-200 rounded-lg text-red-600 hover:bg-red-50 flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-all text-lg font-black" onPointerDown={() => setIsDeleteModalOpen(true)}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673A2.25 2.25 0 0 1 15.916 21.75H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                                    削除
                                 </button>
                             </WithTooltip>
                         )}
                     </div>
                 </div>
-                {!isPreviewMode && !isCompareMode && (
-                    <div className="max-w-full mx-auto mt-1 px-1 flex items-center justify-center gap-2">
-                        <span className="text-[11px] font-black text-slate-500 whitespace-nowrap">一括入力</span>
-                        <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg p-1 shadow-inner">
-                            {([1, 2, 3, 4, 5] as const).map(value => (
-                                <button
-                                    key={value}
-                                    onPointerDown={() => handleBulkPocketDepth(value)}
-                                    className="h-8 w-9 rounded-md bg-white border border-slate-200 text-slate-800 text-sm font-black shadow-sm hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 active:scale-95 transition-all"
-                                    title={`全顎のポケットに${value}mmを入力`}
-                                >
-                                    {value}
-                                </button>
-                            ))}
-                            <div className="w-px h-6 bg-slate-200 mx-1" />
-                            <button
-                                onPointerDown={() => handleBulkToggleMeasurement('plaque')}
-                                className="h-8 px-3 rounded-md bg-white border border-slate-200 text-rose-600 text-xs font-black shadow-sm hover:bg-rose-50 hover:border-rose-200 active:scale-95 transition-all"
-                                title="全顎のプラークをON/OFF"
-                            >
-                                プラーク
-                            </button>
-                            <button
-                                onPointerDown={() => handleBulkToggleMeasurement('bleeding')}
-                                className="h-8 px-3 rounded-md bg-white border border-slate-200 text-red-600 text-xs font-black shadow-sm hover:bg-red-50 hover:border-red-200 active:scale-95 transition-all"
-                                title="全顎の出血をON/OFF"
-                            >
-                                出血
-                            </button>
-                            <button
-                                onPointerDown={() => handleBulkToggleMeasurement('pus')}
-                                className="h-8 px-3 rounded-md bg-white border border-slate-200 text-slate-600 text-xs font-black shadow-sm hover:bg-slate-100 hover:border-slate-300 active:scale-95 transition-all"
-                                title="全顎の排膿をON/OFF"
-                            >
-                                排膿
-                            </button>
-                        </div>
-                    </div>
-                )}
             </header>
 
             {/* Main Content Area */}
