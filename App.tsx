@@ -1801,12 +1801,12 @@ const App: React.FC = () => {
 
             {/* Header - Compact (Hidden on print) */}
             <header className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50 shrink-0 print:hidden">
-                <div className="w-full max-w-[1120px] mx-auto px-2 py-2 flex items-center justify-between gap-2 border-b border-slate-100">
-                    <div className="flex items-center gap-2 min-w-[210px]">
+                <div className="w-full max-w-[810px] mx-auto px-1.5 py-1.5 flex items-center justify-between gap-1.5 border-b border-slate-100">
+                    <div className="flex items-center gap-1.5 min-w-[168px]">
                         <div className="flex flex-col">
                             <span className="font-mono font-bold text-slate-400 text-xs leading-tight">000000001</span>
                             <div className="flex items-center gap-2">
-                                <span className="font-black text-slate-800 text-xl leading-none">吉田 太郎</span>
+                                <span className="font-black text-slate-800 text-lg leading-none">吉田 太郎</span>
                                 <span className="text-slate-400 font-bold text-sm">様</span>
                                 <button
                                     onPointerDown={() => setIsSettingsOpen(true)}
@@ -1823,13 +1823,13 @@ const App: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 justify-center flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 justify-center flex-1 min-w-0">
                         <button
                             onPointerDown={() => !isPreviewMode && !isCompareMode && setIsCalendarOpen(true)}
                             disabled={isPreviewMode || isCompareMode}
-                            className={`h-10 bg-white border border-slate-200 rounded-lg px-3 text-base font-black text-slate-800 shadow-sm flex items-center gap-2 hover:bg-slate-50 active:bg-slate-100 transition-colors ${isPreviewMode || isCompareMode ? 'opacity-70 pointer-events-none' : ''}`}
+                            className={`h-9 bg-white border border-slate-200 rounded-lg px-2 text-sm font-black text-slate-800 shadow-sm flex items-center gap-1.5 hover:bg-slate-50 active:bg-slate-100 transition-colors ${isPreviewMode || isCompareMode ? 'opacity-70 pointer-events-none' : ''}`}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5 text-slate-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-4 h-4 text-slate-700">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
                             </svg>
                             {selectedDate.replace(/-/g, '/')}
@@ -1838,9 +1838,9 @@ const App: React.FC = () => {
                         {!isPreviewMode && !isCompareMode && (
                             <button
                                 onPointerDown={handleLoadLatestHistory}
-                                className="h-10 px-3 bg-white border border-slate-200 rounded-lg text-slate-800 shadow-sm active:scale-95 transition-all flex items-center gap-2 text-base font-black"
+                                className="h-9 px-2 bg-white border border-slate-200 rounded-lg text-slate-800 shadow-sm active:scale-95 transition-all flex items-center gap-1.5 text-sm font-black"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                 </svg>
                                 履歴
@@ -1849,28 +1849,28 @@ const App: React.FC = () => {
 
                         {!isPreviewMode && !isCompareMode && (
                             <div className={`
-                                h-10 flex items-center gap-2 px-3 rounded-lg border shadow-sm transition-all duration-300
+                                h-9 flex items-center gap-1.5 px-2 rounded-lg border shadow-sm transition-all duration-300
                                 ${totalMinutes >= 15 
                                     ? 'bg-white border-slate-200' 
                                     : 'bg-orange-50 border-orange-200 animate-pulse-slow'}
                             `}>
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-slate-800">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-slate-800">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                 </svg>
-                                <button onPointerDown={handleNowClick} className="px-2 py-1 bg-white border border-slate-200 rounded-md text-xs font-bold text-slate-700 shadow-sm active:scale-95 transition-all">今</button>
-                                <input type="time" value={startTime} onChange={(e) => handleStartTimeChange(e.target.value)} className="bg-transparent border-none focus:ring-0 text-base font-black text-slate-800 w-[76px] text-center p-0" />
-                                <span className="text-slate-500 text-lg font-black">〜</span>
-                                <input type="time" value={endTime} onChange={(e) => handleEndTimeChange(e.target.value)} className="bg-transparent border-none focus:ring-0 text-base font-black text-slate-800 w-[76px] text-center p-0" />
-                                <span className={`text-base font-black ${totalMinutes < 15 ? 'text-orange-700' : 'text-slate-800'}`}>{totalMinutes}分</span>
-                                <button onPointerDown={handleAdd5Min} className="px-2 py-1 bg-white border border-slate-200 rounded-md shadow-sm text-blue-600 text-base font-black hover:bg-blue-50 active:scale-95 transition-all">+5分</button>
+                                <button onPointerDown={handleNowClick} className="px-1.5 py-0.5 bg-white border border-slate-200 rounded-md text-[11px] font-bold text-slate-700 shadow-sm active:scale-95 transition-all">今</button>
+                                <input type="time" value={startTime} onChange={(e) => handleStartTimeChange(e.target.value)} className="bg-transparent border-none focus:ring-0 text-sm font-black text-slate-800 w-[62px] text-center p-0" />
+                                <span className="text-slate-500 text-base font-black">〜</span>
+                                <input type="time" value={endTime} onChange={(e) => handleEndTimeChange(e.target.value)} className="bg-transparent border-none focus:ring-0 text-sm font-black text-slate-800 w-[62px] text-center p-0" />
+                                <span className={`text-sm font-black ${totalMinutes < 15 ? 'text-orange-700' : 'text-slate-800'}`}>{totalMinutes}分</span>
+                                <button onPointerDown={handleAdd5Min} className="px-1.5 py-0.5 bg-white border border-slate-200 rounded-md shadow-sm text-blue-600 text-sm font-black hover:bg-blue-50 active:scale-95 transition-all">+5分</button>
                             </div>
                         )}
                     </div>
 
-                    <div className="flex items-center gap-2 justify-end min-w-[108px]">
+                    <div className="flex items-center gap-1.5 justify-end min-w-[84px]">
                         <WithTooltip label={isPreviewMode ? "閉じる" : "プレビュー"} showLabels={showLabels}>
                             <button
-                                className={`w-10 h-10 border rounded-lg shadow-sm active:scale-95 transition-all flex items-center justify-center ${isPreviewMode ? 'bg-slate-800 text-white border-slate-900' : 'bg-white text-slate-800 border-slate-200'}`}
+                                className={`w-9 h-9 border rounded-lg shadow-sm active:scale-95 transition-all flex items-center justify-center ${isPreviewMode ? 'bg-slate-800 text-white border-slate-900' : 'bg-white text-slate-800 border-slate-200'}`}
                                 onPointerDown={() => {
                                     if (isPreviewMode) {
                                         setIsPreviewMode(false); setIsPisaPreview(false); setShowFurcation(false); setPreviewPlaqueMode('all'); setIsCompareMode(false); setCompareTargetDates([]); setZoomLevel(0.7); setPreviewContentHeight(0);
@@ -1890,7 +1890,7 @@ const App: React.FC = () => {
                         <WithTooltip label={`実施者: ${selectedExaminer.name}`} showLabels={showLabels}>
                             <button
                                 onPointerDown={() => setIsExaminerModalOpen(true)}
-                                className={`w-11 h-11 rounded-full flex items-center justify-center text-white font-black text-sm shadow-md active:scale-95 transition-all border-2 border-white ${selectedExaminer.color}`}
+                                className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-xs shadow-md active:scale-95 transition-all border-2 border-white ${selectedExaminer.color}`}
                             >
                                 {getExaminerShortLabel(selectedExaminer)}
                             </button>
@@ -1898,37 +1898,37 @@ const App: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="w-full max-w-[1120px] mx-auto px-2 py-2 flex items-center justify-between gap-2">
+                <div className="w-full max-w-[810px] mx-auto px-1.5 py-1.5 flex items-center justify-between gap-1.5">
                     {/* Left Group */}
-                    <div className="flex items-center gap-3 shrink-0 min-w-0">
+                    <div className="flex items-center gap-2 shrink-0 min-w-0">
                         <MethodSelector current={measurementMethod} onChange={(m) => { setMeasurementMethod(m); if (m !== '6-point') setIsPisaPreview(false); }} />
                         <div className={`${measurementMethod === '1-point' || isPreviewMode || isCompareMode ? 'hidden' : 'block'}`}>
                             <MiniMap current={currentQuadrant} onSelect={setCurrentQuadrant} />
                         </div>
                         {!isPreviewMode && !isCompareMode && (
-                            <div className="flex items-center gap-2 min-w-0">
-                                <span className="text-sm font-black text-slate-600 whitespace-nowrap">一括入力</span>
-                                <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                                <span className="text-xs font-black text-slate-600 whitespace-nowrap">一括入力</span>
+                                <div className="flex items-center gap-1">
                                     {([1, 2, 3, 4, 5] as const).map(value => (
                                         <button
                                             key={value}
                                             onPointerDown={() => handleBulkPocketDepth(value)}
-                                            className="h-10 w-10 rounded-lg bg-white border border-slate-200 text-slate-800 text-lg font-black shadow-sm hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 active:scale-95 transition-all"
+                                            className="h-9 w-9 rounded-lg bg-white border border-slate-200 text-slate-800 text-base font-black shadow-sm hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 active:scale-95 transition-all"
                                             title={`全顎のポケットに${value}mmを入力`}
                                         >
                                             {value}
                                         </button>
                                     ))}
-                                    <div className="w-px h-8 bg-slate-200 mx-1" />
-                                    <button onPointerDown={() => handleBulkToggleMeasurement('plaque')} className="h-10 px-3 rounded-lg bg-white border border-slate-200 text-rose-600 text-sm font-black shadow-sm hover:bg-rose-50 hover:border-rose-200 active:scale-95 transition-all" title="全顎のプラークをON/OFF">プラーク</button>
-                                    <button onPointerDown={() => handleBulkToggleMeasurement('bleeding')} className="h-10 px-3 rounded-lg bg-white border border-slate-200 text-red-600 text-sm font-black shadow-sm hover:bg-red-50 hover:border-red-200 active:scale-95 transition-all" title="全顎の出血をON/OFF">出血</button>
-                                    <button onPointerDown={() => handleBulkToggleMeasurement('pus')} className="h-10 px-3 rounded-lg bg-white border border-slate-200 text-slate-800 text-sm font-black shadow-sm hover:bg-slate-100 hover:border-slate-300 active:scale-95 transition-all" title="全顎の排膿をON/OFF">排膿</button>
+                                    <div className="w-px h-7 bg-slate-200 mx-0.5" />
+                                    <button onPointerDown={() => handleBulkToggleMeasurement('plaque')} className="h-9 px-2 rounded-lg bg-white border border-slate-200 text-rose-600 text-xs font-black shadow-sm hover:bg-rose-50 hover:border-rose-200 active:scale-95 transition-all" title="全顎のプラークをON/OFF">プラーク</button>
+                                    <button onPointerDown={() => handleBulkToggleMeasurement('bleeding')} className="h-9 px-2 rounded-lg bg-white border border-slate-200 text-red-600 text-xs font-black shadow-sm hover:bg-red-50 hover:border-red-200 active:scale-95 transition-all" title="全顎の出血をON/OFF">出血</button>
+                                    <button onPointerDown={() => handleBulkToggleMeasurement('pus')} className="h-9 px-2 rounded-lg bg-white border border-slate-200 text-slate-800 text-xs font-black shadow-sm hover:bg-slate-100 hover:border-slate-300 active:scale-95 transition-all" title="全顎の排膿をON/OFF">排膿</button>
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0">
                         {(isPreviewMode || isCompareMode) && (
                             <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-0.5 shadow-sm h-9">
                                 <button onPointerDown={handleZoomOut} className="w-8 h-full flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded active:bg-slate-200 transition-colors font-bold text-lg leading-none pb-1" title="縮小">−</button>
@@ -1954,24 +1954,24 @@ const App: React.FC = () => {
                         )}
                         {/* Bulk Status (Edit Mode only) */}
                         {!isPreviewMode && !isCompareMode && (
-                            <div className="flex flex-col gap-1 bg-teal-50 border border-teal-200 rounded-lg px-2 py-1.5 shadow-sm">
+                            <div className="flex flex-col gap-1 bg-teal-50 border border-teal-200 rounded-lg px-1.5 py-1 shadow-sm">
                                 <span className="text-xs font-black text-teal-700 leading-none">歯牙状態</span>
                                 <div className="flex items-center gap-1.5">
                                 <WithTooltip label="全顎欠損" showLabels={showLabels}>
-                                    <button onPointerDown={() => handleBulkStatusChange('all_missing')} className="h-8 px-3 text-xs font-black bg-white text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 shadow-sm transition-colors">欠損</button>
+                                    <button onPointerDown={() => handleBulkStatusChange('all_missing')} className="h-7 px-2 text-[11px] font-black bg-white text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 shadow-sm transition-colors">欠損</button>
                                 </WithTooltip>
                                 <WithTooltip label="全顎乳歯" showLabels={showLabels}>
-                                    <button onPointerDown={() => handleBulkStatusChange('all_primary')} className="h-8 px-3 text-xs font-black bg-white text-green-600 border border-slate-200 rounded-lg hover:bg-green-50 shadow-sm transition-colors">乳歯</button>
+                                    <button onPointerDown={() => handleBulkStatusChange('all_primary')} className="h-7 px-2 text-[11px] font-black bg-white text-green-600 border border-slate-200 rounded-lg hover:bg-green-50 shadow-sm transition-colors">乳歯</button>
                                 </WithTooltip>
                                 <WithTooltip label="全て永久歯に戻す" showLabels={showLabels}>
-                                    <button onPointerDown={() => handleBulkStatusChange('reset')} className="h-8 px-3 text-xs font-black bg-white text-teal-600 border border-slate-200 rounded-lg hover:bg-teal-50 shadow-sm transition-colors">状態解除</button>
+                                    <button onPointerDown={() => handleBulkStatusChange('reset')} className="h-7 px-2 text-[11px] font-black bg-white text-teal-600 border border-slate-200 rounded-lg hover:bg-teal-50 shadow-sm transition-colors">解除</button>
                                 </WithTooltip>
                                 </div>
                             </div>
                         )}
                         {!isPreviewMode && (
                             <WithTooltip label="保存" showLabels={showLabels}>
-                                <button className="h-10 px-3 bg-white border border-slate-200 rounded-lg text-slate-800 hover:text-blue-600 flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all text-sm font-black" onPointerDown={() => handleSave()}>
+                                <button className="h-9 px-2 bg-white border border-slate-200 rounded-lg text-slate-800 hover:text-blue-600 flex items-center justify-center gap-1 shadow-sm active:scale-95 transition-all text-xs font-black" onPointerDown={() => handleSave()}>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" /></svg>
                                     保存
                                 </button>
@@ -1980,7 +1980,7 @@ const App: React.FC = () => {
 
                         {!isPreviewMode && (
                             <WithTooltip label="リセット / 削除" showLabels={showLabels}>
-                                <button className="h-10 px-3 bg-white border border-slate-200 rounded-lg text-red-600 hover:bg-red-50 flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all text-sm font-black" onPointerDown={() => setIsDeleteModalOpen(true)}>
+                                <button className="h-9 px-2 bg-white border border-slate-200 rounded-lg text-red-600 hover:bg-red-50 flex items-center justify-center gap-1 shadow-sm active:scale-95 transition-all text-xs font-black" onPointerDown={() => setIsDeleteModalOpen(true)}>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 7h12M9 7V5h6v2m-8 0 1 12h8l1-12M10 11v5m4-5v5" /></svg>
                                     削除
                                 </button>
