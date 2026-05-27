@@ -115,6 +115,8 @@ const generateFullMouth = () => ({
 });
 
 type Quadrant = 'UL' | 'UR' | 'LL' | 'LR';
+type FullMouthData = { UL: ToothData[]; UR: ToothData[]; LL: ToothData[]; LR: ToothData[] };
+type BulkToggleTarget = 'plaque' | 'bleeding' | 'pus';
 
 // --- UI Components ---
 
@@ -491,7 +493,7 @@ const App: React.FC = () => {
 
 
     // Main Data Store
-    const [allTeethData, setAllTeethData] = useState<Record<MeasurementMethod, { UL: ToothData[]; UR: ToothData[]; LL: ToothData[]; LR: ToothData[] }>>({
+    const [allTeethData, setAllTeethData] = useState<Record<MeasurementMethod, FullMouthData>>({
         '1-point': generateFullMouth(),
         '4-point': generateFullMouth(),
         '6-point': generateFullMouth(),
@@ -1100,6 +1102,108 @@ const App: React.FC = () => {
             }
         }));
         setIsDirty(true); // Mark as dirty on change
+    };
+
+    const getBulkMeasurementConfig = (method: MeasurementMethod) => {
+        switch (method) {
+            case '1-point':
+                return { indices: [1] as const, sides: ['buccal'] as const };
+            case '4-point':
+                return { indices: [0, 2] as const, sides: ['buccal', 'lingual'] as const };
+            case '6-point':
+            default:
+                return { indices: [0, 1, 2] as const, sides: ['buccal', 'lingual'] as const };
+        }
+    };
+
+    const handleBulkPocketDepth = (value: 1 | 2 | 3 | 4 | 5) => {
+        const { indices, sides } = getBulkMeasurementConfig(measurementMethod);
+
+        setAllTeethData(prev => {
+            const currentData = prev[measurementMethod];
+            const quadrants: Quadrant[] = ['UL', 'UR', 'LL', 'LR'];
+            const newMethodData = { ...currentData };
+
+            quadrants.forEach(quad => {
+                newMethodData[quad] = currentData[quad].map(tooth => {
+                    const nextPocketDepth = {
+                        buccal: [...tooth.pocketDepth.buccal] as [number | null, number | null, number | null],
+                        lingual: [...tooth.pocketDepth.lingual] as [number | null, number | null, number | null],
+                    };
+
+                    sides.forEach(side => {
+                        indices.forEach(index => {
+                            nextPocketDepth[side][index] = value;
+                        });
+                    });
+
+                    return { ...tooth, pocketDepth: nextPocketDepth };
+                });
+            });
+
+            return { ...prev, [measurementMethod]: newMethodData };
+        });
+
+        setIsDirty(true);
+        setToast({ message: `ポケット${value}mmを一括入力しました`, type: 'success' });
+    };
+
+    const handleBulkToggleMeasurement = (target: BulkToggleTarget) => {
+        const { indices, sides } = getBulkMeasurementConfig(measurementMethod);
+
+        setAllTeethData(prev => {
+            const currentData = prev[measurementMethod];
+            const quadrants: Quadrant[] = ['UL', 'UR', 'LL', 'LR'];
+            const teeth = quadrants.flatMap(quad => currentData[quad]).filter(tooth => !tooth.isMissing);
+
+            const shouldTurnOn = target === 'plaque'
+                ? !teeth.every(tooth => Object.values(tooth.plaque).every(Boolean))
+                : !teeth.every(tooth => sides.every(side => indices.every(index => tooth[target][side][index])));
+
+            const newMethodData = { ...currentData };
+
+            quadrants.forEach(quad => {
+                newMethodData[quad] = currentData[quad].map(tooth => {
+                    if (tooth.isMissing) return tooth;
+
+                    if (target === 'plaque') {
+                        return {
+                            ...tooth,
+                            plaque: {
+                                distal: shouldTurnOn,
+                                buccal: shouldTurnOn,
+                                mesial: shouldTurnOn,
+                                lingual: shouldTurnOn,
+                                occlusal: shouldTurnOn,
+                            },
+                        };
+                    }
+
+                    const nextMeasurement = {
+                        buccal: [...tooth[target].buccal] as [boolean, boolean, boolean],
+                        lingual: [...tooth[target].lingual] as [boolean, boolean, boolean],
+                    };
+
+                    sides.forEach(side => {
+                        indices.forEach(index => {
+                            nextMeasurement[side][index] = shouldTurnOn;
+                        });
+                    });
+
+                    return { ...tooth, [target]: nextMeasurement };
+                });
+            });
+
+            return { ...prev, [measurementMethod]: newMethodData };
+        });
+
+        const labels: Record<BulkToggleTarget, string> = {
+            plaque: 'プラーク',
+            bleeding: '出血',
+            pus: '排膿',
+        };
+        setIsDirty(true);
+        setToast({ message: `${labels[target]}を一括切替しました`, type: 'success' });
     };
 
     // Bulk Status Update Handler
@@ -1900,6 +2004,45 @@ const App: React.FC = () => {
                         )}
                     </div>
                 </div>
+                {!isPreviewMode && !isCompareMode && (
+                    <div className="max-w-full mx-auto mt-1 px-1 flex items-center justify-center gap-2">
+                        <span className="text-[11px] font-black text-slate-500 whitespace-nowrap">一括入力</span>
+                        <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg p-1 shadow-inner">
+                            {([1, 2, 3, 4, 5] as const).map(value => (
+                                <button
+                                    key={value}
+                                    onPointerDown={() => handleBulkPocketDepth(value)}
+                                    className="h-8 w-9 rounded-md bg-white border border-slate-200 text-slate-800 text-sm font-black shadow-sm hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 active:scale-95 transition-all"
+                                    title={`全顎のポケットに${value}mmを入力`}
+                                >
+                                    {value}
+                                </button>
+                            ))}
+                            <div className="w-px h-6 bg-slate-200 mx-1" />
+                            <button
+                                onPointerDown={() => handleBulkToggleMeasurement('plaque')}
+                                className="h-8 px-3 rounded-md bg-white border border-slate-200 text-rose-600 text-xs font-black shadow-sm hover:bg-rose-50 hover:border-rose-200 active:scale-95 transition-all"
+                                title="全顎のプラークをON/OFF"
+                            >
+                                プラーク
+                            </button>
+                            <button
+                                onPointerDown={() => handleBulkToggleMeasurement('bleeding')}
+                                className="h-8 px-3 rounded-md bg-white border border-slate-200 text-red-600 text-xs font-black shadow-sm hover:bg-red-50 hover:border-red-200 active:scale-95 transition-all"
+                                title="全顎の出血をON/OFF"
+                            >
+                                出血
+                            </button>
+                            <button
+                                onPointerDown={() => handleBulkToggleMeasurement('pus')}
+                                className="h-8 px-3 rounded-md bg-white border border-slate-200 text-slate-600 text-xs font-black shadow-sm hover:bg-slate-100 hover:border-slate-300 active:scale-95 transition-all"
+                                title="全顎の排膿をON/OFF"
+                            >
+                                排膿
+                            </button>
+                        </div>
+                    </div>
+                )}
             </header>
 
             {/* Main Content Area */}
