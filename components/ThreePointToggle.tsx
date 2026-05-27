@@ -12,6 +12,7 @@ interface ThreePointToggleProps {
 const ThreePointToggle: React.FC<ThreePointToggleProps> = ({ values, onChange, type, singlePoint = false, displayPoints }) => {
   // PoC Colors: Pus = #808080 (Grey), Bleeding = #ff4d4d (Red)
   const activeClass = type === 'pus' ? '!bg-[#808080] text-white' : '!bg-[#ff4d4d] text-white';
+  const inactiveClass = type === 'pus' ? 'bg-slate-100' : 'bg-red-50';
   
   const handlePointerEnter = (e: React.PointerEvent, index: MeasurementPoint, isActive: boolean) => {
     if (e.buttons === 1) {
@@ -41,7 +42,7 @@ const ThreePointToggle: React.FC<ThreePointToggleProps> = ({ values, onChange, t
             className={`
               flex-1 border-r border-[#ccc] last:border-r-0 
               cursor-pointer flex items-center justify-center font-bold select-none
-              ${isActive ? activeClass : ''}
+              ${isActive ? activeClass : inactiveClass}
             `}
           >
             {/* Label optional for compactness */}
